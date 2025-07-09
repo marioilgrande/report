@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dashboard Pratiche ACEA</title>
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -15,6 +15,7 @@
       border-color: var(--tiffany) var(--tiffany) transparent;
     }
     .table thead { background-color: var(--tiffany); color: white; }
+    .table-warning { background-color: #fff3cd !important; }
     .btn-tiffany { background-color: var(--tiffany); border-color: var(--tiffany); color: white; }
     .btn-tiffany:hover { background-color: #089a94; border-color: #089a94; color: white; }
     .col-filter { width: 100%; padding: .25rem .5rem; font-size: .875rem; }
@@ -23,24 +24,39 @@
 </head>
 <body class="p-4">
   <div class="container">
-    <h1 class="mb-4 text-center" style="color: var(--tiffany);">Dashboard Pratiche ACEA</h1>
+    <h1 class="mb-4 text-center" style="color: var(--tiffany)">Dashboard Pratiche ACEA</h1>
     <div class="mb-4">
       <label for="fileInput" class="form-label">Carica file Excel</label>
-      <input type="file" id="fileInput" class="form-control" accept=".xlsx" />
+      <input type="file" id="fileInput" class="form-control" accept=".xlsx">
     </div>
 
-    <ul class="nav nav-tabs mb-3">
-      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dealer">Negozi OK</button></li>
-      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-manager">Area Manager OK</button></li>
-      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ok-details">Pratiche OK</button></li>
-      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ko">Pratiche KO</button></li>
-      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-nonfirmati">Non Firmati</button></li>
+    <ul class="nav nav-tabs mb-3" id="mainTabs">
+      <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dealer">Negozi OK</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-manager">Area Manager OK</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ok-details">Pratiche OK</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ko">Pratiche KO</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-nonfirmati">Non Firmati</button>
+      </li>
     </ul>
 
     <div class="tab-content">
       <!-- Negozi OK -->
       <div class="tab-pane fade show active" id="tab-dealer">
-        <h4 class="text-tiffany">Classifica Negozi (OK)</h4>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h4 class="text-tiffany">Classifica Negozi (OK)</h4>
+          <select id="filterDealerAm" class="form-select search-input">
+            <option value="">Tutti AM</option>
+          </select>
+        </div>
         <table id="dealerTable" class="table table-striped"></table>
       </div>
 
@@ -58,8 +74,9 @@
             <tr>
               <th>Sel.</th><th>AM</th><th>Dealer</th><th>Nome Op.</th><th>Stato PDC</th>
               <th>P.IVA</th><th>CF</th><th>Nome</th><th>Cognome</th><th>Prest.</th>
-              <th>Stato Case</th><th>Indirizzo</th><th>Prodotto</th><th>Stato</th>
-              <th>Caus. Ann.</th><th>Caus. Ebdm</th><th>SP Code</th>
+              <th>Stato Case</th><th>Indirizzo</th><th>Data creazione</th>
+              <th>Causale annullamento</th><th>Causale Annullamento</th>
+              <th>Caus. Ebdm</th><th>SP Code</th>
             </tr>
             <tr>
               <th></th>
@@ -74,9 +91,9 @@
               <th><input class="col-filter" data-field="Prestazione" placeholder="Prest."></th>
               <th><input class="col-filter" data-field="Stato Case" placeholder="Stato Case"></th>
               <th><input class="col-filter" data-field="Indirizzo" placeholder="Indirizzo"></th>
-              <th><input class="col-filter" data-field="Nome Prodotto" placeholder="Prodotto"></th>
-              <th><input class="col-filter" data-field="STATO" placeholder="Stato"></th>
-              <th><input class="col-filter" data-field="Causale Annullamento" placeholder="Caus. Ann."></th>
+              <th><input class="col-filter" data-field="Data creazione" placeholder="Data creazione"></th>
+              <th><input class="col-filter" data-field="Causale annullamento" placeholder="Causale annullamento"></th>
+              <th><input class="col-filter" data-field="Causale Annullamento" placeholder="Causale Annullamento"></th>
               <th><input class="col-filter" data-field="Causale Ebdm" placeholder="Caus. Ebdm"></th>
               <th><input class="col-filter" data-field="Service Point Code" placeholder="SP Code"></th>
             </tr>
@@ -93,8 +110,9 @@
             <tr>
               <th>Sel.</th><th>AM</th><th>Dealer</th><th>Nome Op.</th><th>Stato PDC</th>
               <th>P.IVA</th><th>CF</th><th>Nome</th><th>Cognome</th><th>Prest.</th>
-              <th>Stato Case</th><th>Indirizzo</th><th>Prodotto</th><th>Stato</th>
-              <th>Caus. Ann.</th><th>Caus. Ebdm</th><th>SP Code</th>
+              <th>Stato Case</th><th>Indirizzo</th><th>Data creazione</th>
+              <th>Causale annullamento</th><th>Causale Annullamento</th>
+              <th>Caus. Ebdm</th><th>SP Code</th>
             </tr>
             <tr>
               <th></th>
@@ -109,19 +127,19 @@
               <th><input class="col-filter" data-field="Prestazione" placeholder="Prest."></th>
               <th><input class="col-filter" data-field="Stato Case" placeholder="Stato Case"></th>
               <th><input class="col-filter" data-field="Indirizzo" placeholder="Indirizzo"></th>
-              <th><input class="col-filter" data-field="Nome Prodotto" placeholder="Prodotto"></th>
-              <th><input class="col-filter" data-field="STATO" placeholder="Stato"></th>
-              <th><input class="col-filter" data-field="Causale Annullamento" placeholder="Caus. Ann."></th>
+              <th><input class="col-filter" data-field="Data creazione" placeholder="Data creazione"></th>
+              <th><input class="col-filter" data-field="Causale annullamento" placeholder="Causale annullamento"></th>
+              <th><input class="col-filter" data-field="Causale Annullamento" placeholder="Causale Annullamento"></th>
               <th><input class="col-filter" data-field="Causale Ebdm" placeholder="Caus. Ebdm"></th>
               <th><input class="col-filter" data-field="Service Point Code" placeholder="SP Code"></th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
-        <button type="button" id="sendEmailKo" class="btn btn-tiffany mt-2">Invia KO via Email</button>
+        <button id="sendEmailKo" class="btn btn-tiffany mt-2">Invia KO via Email</button>
       </div>
 
-      <!-- Pratiche Non Firmate -->
+      <!-- Pratiche Non Firmati -->
       <div class="tab-pane fade" id="tab-nonfirmati">
         <h4 class="text-tiffany mb-2">Pratiche Non Firmate</h4>
         <table id="nonFirmatiTable" class="table table-bordered">
@@ -129,8 +147,9 @@
             <tr>
               <th>Sel.</th><th>AM</th><th>Dealer</th><th>Nome Op.</th><th>Stato PDC</th>
               <th>P.IVA</th><th>CF</th><th>Nome</th><th>Cognome</th><th>Prest.</th>
-              <th>Stato Case</th><th>Indirizzo</th><th>Prodotto</th><th>Stato</th>
-              <th>Caus. Ann.</th><th>Caus. Ebdm</th><th>SP Code</th>
+              <th>Stato Case</th><th>Indirizzo</th><th>Data creazione</th>
+              <th>Causale annullamento</th><th>Causale Annullamento</th>
+              <th>Caus. Ebdm</th><th>SP Code</th>
             </tr>
             <tr>
               <th></th>
@@ -145,16 +164,16 @@
               <th><input class="col-filter" data-field="Prestazione" placeholder="Prest."></th>
               <th><input class="col-filter" data-field="Stato Case" placeholder="Stato Case"></th>
               <th><input class="col-filter" data-field="Indirizzo" placeholder="Indirizzo"></th>
-              <th><input class="col-filter" data-field="Nome Prodotto" placeholder="Prodotto"></th>
-              <th><input class="col-filter" data-field="STATO" placeholder="Stato"></th>
-              <th><input class="col-filter" data-field="Causale Annullamento" placeholder="Caus. Ann."></th>
+              <th><input class="col-filter" data-field="Data creazione" placeholder="Data creazione"></th>
+              <th><input class="col-filter" data-field="Causale annullamento" placeholder="Causale annullamento"></th>
+              <th><input class="col-filter" data-field="Causale Annullamento" placeholder="Causale Annullamento"></th>
               <th><input class="col-filter" data-field="Causale Ebdm" placeholder="Caus. Ebdm"></th>
               <th><input class="col-filter" data-field="Service Point Code" placeholder="SP Code"></th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
-        <button type="button" id="sendEmailNonFirmati" class="btn btn-tiffany mt-2">Invia Non Firmati via Email</button>
+        <button id="sendEmailNonFirmati" class="btn btn-tiffany mt-2">Invia Non Firmati via Email</button>
       </div>
     </div>
   </div>
@@ -165,20 +184,38 @@
     let workbookData = [];
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Carica dati persistiti
       const saved = localStorage.getItem('dashboardData');
-      if (saved) workbookData = JSON.parse(saved);
+      if (saved) {
+        workbookData = JSON.parse(saved);
+      }
+
+      // Event listeners
+      document.getElementById('fileInput').addEventListener('change', handleFile);
+      document.getElementById('filterDealerAm').addEventListener('change', renderDealer);
+      document.querySelectorAll('.col-filter').forEach(input => {
+        input.addEventListener('input', () => {
+          renderOKDetailsTable();
+          renderKOTable();
+          renderNonFirmatiTable();
+        });
+      });
+      document.getElementById('sendEmailKo').addEventListener('click', sendKOEmail);
+      document.getElementById('sendEmailNonFirmati').addEventListener('click', sendNonFirmatiEmail);
+
+      // Prima renderizzazione
+      populateAmFilters();
       renderAll();
     });
 
-    document.getElementById('fileInput').addEventListener('change', handleFile);
     function handleFile(e) {
       const reader = new FileReader();
       reader.onload = ev => {
-        const data = new Uint8Array(ev.target.result);
-        const wb = XLSX.read(data, { type: 'array' });
+        const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
         const ws = wb.Sheets[wb.SheetNames[0]];
         workbookData = XLSX.utils.sheet_to_json(ws, { defval: '' });
         localStorage.setItem('dashboardData', JSON.stringify(workbookData));
+        populateAmFilters();
         renderAll();
       };
       reader.readAsArrayBuffer(e.target.files[0]);
@@ -190,31 +227,48 @@
       renderOKDetailsTable();
       renderKOTable();
       renderNonFirmatiTable();
-      attachColumnFilterListeners();
+    }
+
+    function populateAmFilters() {
+      const ams = Array.from(new Set(workbookData.map(r => r['AM']))).filter(a => a);
+      const opts = '<option value="">Tutti AM</option>' + ams.map(a => `<option>${a}</option>`).join('');
+      document.getElementById('filterDealerAm').innerHTML = opts;
     }
 
     function renderDealer() {
-      const ok = workbookData.filter(r => r['STATO'] === 'OK');
+      const amVal = document.getElementById('filterDealerAm').value;
+      const ok = workbookData.filter(r =>
+        r['STATO'] === 'OK' && (amVal === '' || r['AM'] === amVal)
+      );
       const cnt = {};
-      ok.forEach(r => cnt[r.DEALER] = (cnt[r.DEALER] || 0) + 1);
-      const arr = Object.entries(cnt)
-                    .map(([dealer, count]) => ({ dealer, count }))
-                    .sort((a, b) => b.count - a.count);
+      ok.forEach(r => {
+        const key = `${r.DEALER}||${r.AM}`;
+        cnt[key] = (cnt[key]||0) + 1;
+      });
+      const arr = Object.entries(cnt).map(([k,c]) => {
+        const [dealer,am] = k.split('||');
+        return { dealer, am, count: c };
+      }).sort((a,b) => b.count - a.count);
       const tbl = document.getElementById('dealerTable');
-      tbl.innerHTML = '<thead><tr><th>#</th><th>Dealer</th><th>OK</th></tr></thead>' +
-        '<tbody>' + arr.map((d, i) => `<tr><td>${i+1}</td><td>${d.dealer}</td><td>${d.count}</td></tr>`).join('') + '</tbody>';
+      tbl.innerHTML =
+        '<thead><tr><th>#</th><th>Dealer</th><th>AM</th><th>OK</th></tr></thead>' +
+        '<tbody>' + arr.map((d,i) =>
+          `<tr><td>${i+1}</td><td>${d.dealer}</td><td>${d.am}</td><td>${d.count}</td></tr>`
+        ).join('') + '</tbody>';
     }
 
     function renderManager() {
       const ok = workbookData.filter(r => r['STATO'] === 'OK');
       const cnt = {};
-      ok.forEach(r => cnt[r['AM']] = (cnt[r['AM']] || 0) + 1);
-      const arr = Object.entries(cnt)
-                    .map(([am, count]) => ({ am, count }))
-                    .sort((a, b) => b.count - a.count);
+      ok.forEach(r => cnt[r['AM']] = (cnt[r['AM']]||0) + 1);
+      const arr = Object.entries(cnt).map(([am,c]) => ({ am, count: c }))
+                    .sort((a,b) => b.count - a.count);
       const tbl = document.getElementById('managerTable');
-      tbl.innerHTML = '<thead><tr><th>#</th><th>AM</th><th>OK</th></tr></thead>' +
-        '<tbody>' + arr.map((d, i) => `<tr><td>${i+1}</td><td>${d.am}</td><td>${d.count}</td></tr>`).join('') + '</tbody>';
+      tbl.innerHTML =
+        '<thead><tr><th>#</th><th>AM</th><th>OK</th></tr></thead>' +
+        '<tbody>' + arr.map((d,i) =>
+          `<tr><td>${i+1}</td><td>${d.am}</td><td>${d.count}</td></tr>`
+        ).join('') + '</tbody>';
     }
 
     function applyColumnFilters(rows, tableId) {
@@ -224,100 +278,156 @@
         if (v) filters[input.dataset.field] = v;
       });
       return rows.filter(r =>
-        Object.entries(filters).every(([f, v]) =>
-          String(r[f] || '').toLowerCase().includes(v)
+        Object.entries(filters).every(([k,v]) =>
+          String(r[k]||'').toLowerCase().includes(v)
         )
       );
     }
 
     function renderOKDetailsTable() {
-      let rows = workbookData.filter(r => r['STATO'] === 'OK');
-      rows = applyColumnFilters(rows, 'okDetailsTable');
-      document.querySelector('#okDetailsTable tbody').innerHTML =
-        rows.map((r, i) => `
-        <tr>
+      const rows = applyColumnFilters(
+        workbookData.filter(r => r['STATO']==='OK'),
+        'okDetailsTable'
+      );
+      const tbody = document.querySelector('#okDetailsTable tbody');
+      tbody.innerHTML = rows.map((r,i) => `
+        <tr data-key="${r['Service Point Code']}-${r['Nome opportunità']}">
           <td><input type="checkbox" value="${i}"></td>
-          <td>${r['AM']}</td><td>${r.DEALER}</td><td>${r['Nome opportunità']}</td>
-          <td>${r['Stato PDC']}</td><td>${r['Partita IVA']}</td>
-          <td>${r['Codice Fiscale Cliente']}</td><td>${r['Nome Cliente']}</td>
-          <td>${r['Cognome Cliente']}</td><td>${r['Prestazione']}</td>
-          <td>${r['Stato Case']}</td><td>${r.Indirizzo}</td>
-          <td>${r['Nome Prodotto']}</td><td>${r['STATO']}</td>
-          <td>${r['Causale Annullamento']}</td><td>${r['Causale Ebdm']}</td>
+          <td>${r['AM']}</td>
+          <td>${r.DEALER}</td>
+          <td>${r['Nome opportunità']}</td>
+          <td>${r['Stato PDC']}</td>
+          <td>${r['Partita IVA']}</td>
+          <td>${r['Codice Fiscale Cliente']}</td>
+          <td>${r['Nome Cliente']}</td>
+          <td>${r['Cognome Cliente']}</td>
+          <td>${r['Prestazione']}</td>
+          <td>${r['Stato Case']}</td>
+          <td>${r.Indirizzo}</td>
+          <td>${r['Data creazione']}</td>
+          <td>${r['Causale annullamento']}</td>
+          <td>${r['Causale Annullamento']}</td>
+          <td>${r['Causale Ebdm']}</td>
           <td>${r['Service Point Code']}</td>
         </tr>`).join('');
+      restoreSelections('okDetailsTable','sentOkKeys');
     }
 
     function renderKOTable() {
-      let rows = workbookData.filter(r => r['STATO'] === 'KO');
-      rows = applyColumnFilters(rows, 'koTable');
-      document.querySelector('#koTable tbody').innerHTML =
-        rows.map((r, i) => `
-        <tr>
+      const rows = applyColumnFilters(
+        workbookData.filter(r => r['STATO']==='KO'),
+        'koTable'
+      );
+      const tbody = document.querySelector('#koTable tbody');
+      tbody.innerHTML = rows.map((r,i) => `
+        <tr data-key="${r['Service Point Code']}-${r['Nome opportunità']}">
           <td><input type="checkbox" value="${i}"></td>
-          <td>${r['AM']}</td><td>${r.DEALER}</td><td>${r['Nome opportunità']}</td>
-          <td>${r['Stato PDC']}</td><td>${r['Partita IVA']}</td>
-          <td>${r['Codice Fiscale Cliente']}</td><td>${r['Nome Cliente']}</td>
-          <td>${r['Cognome Cliente']}</td><td>${r['Prestazione']}</td>
-          <td>${r['Stato Case']}</td><td>${r.Indirizzo}</td>
-          <td>${r['Nome Prodotto']}</td><td>${r['STATO']}</td>
-          <td>${r['Causale Annullamento']}</td><td>${r['Causale Ebdm']}</td>
+          <td>${r['AM']}</td>
+          <td>${r.DEALER}</td>
+          <td>${r['Nome opportunità']}</td>
+          <td>${r['Stato PDC']}</td>
+          <td>${r['Partita IVA']}</td>
+          <td>${r['Codice Fiscale Cliente']}</td>
+          <td>${r['Nome Cliente']}</td>
+          <td>${r['Cognome Cliente']}</td>
+          <td>${r['Prestazione']}</td>
+          <td>${r['Stato Case']}</td>
+          <td>${r.Indirizzo}</td>
+          <td>${r['Data creazione']}</td>
+          <td>${r['Causale annullamento']}</td>
+          <td>${r['Causale Annullamento']}</td>
+          <td>${r['Causale Ebdm']}</td>
           <td>${r['Service Point Code']}</td>
         </tr>`).join('');
+      restoreSelections('koTable','sentKoKeys');
     }
 
     function renderNonFirmatiTable() {
-      let rows = workbookData.filter(r => r['STATO'] === 'NON FIRMATO');
-      rows = applyColumnFilters(rows, 'nonFirmatiTable');
-      document.querySelector('#nonFirmatiTable tbody').innerHTML =
-        rows.map((r, i) => `
-        <tr>
+      const rows = applyColumnFilters(
+        workbookData.filter(r => r['STATO']==='NON FIRMATO'),
+        'nonFirmatiTable'
+      );
+      const tbody = document.querySelector('#nonFirmatiTable tbody');
+      tbody.innerHTML = rows.map((r,i) => `
+        <tr data-key="${r['Service Point Code']}-${r['Nome opportunità']}">
           <td><input type="checkbox" value="${i}"></td>
-          <td>${r['AM']}</td><td>${r.DEALER}</td><td>${r['Nome opportunità']}</td>
-          <td>${r['Stato PDC']}</td><td>${r['Partita IVA']}</td>
-          <td>${r['Codice Fiscale Cliente']}</td><td>${r['Nome Cliente']}</td>
-          <td>${r['Cognome Cliente']}</td><td>${r['Prestazione']}</td>
-          <td>${r['Stato Case']}</td><td>${r.Indirizzo}</td>
-          <td>${r['Nome Prodotto']}</td><td>${r['STATO']}</td>
-          <td>${r['Causale Annullamento']}</td><td>${r['Causale Ebdm']}</td>
+          <td>${r['AM']}</td>
+          <td>${r.DEALER}</td>
+          <td>${r['Nome opportunità']}</td>
+          <td>${r['Stato PDC']}</td>
+          <td>${r['Partita IVA']}</td>
+          <td>${r['Codice Fiscale Cliente']}</td>
+          <td>${r['Nome Cliente']}</td>
+          <td>${r['Cognome Cliente']}</td>
+          <td>${r['Prestazione']}</td>
+          <td>${r['Stato Case']}</td>
+          <td>${r.Indirizzo}</td>
+          <td>${r['Data creazione']}</td>
+          <td>${r['Causale annullamento']}</td>
+          <td>${r['Causale Annullamento']}</td>
+          <td>${r['Causale Ebdm']}</td>
           <td>${r['Service Point Code']}</td>
         </tr>`).join('');
+      restoreSelections('nonFirmatiTable','sentNonFirmatiKeys');
     }
 
-    function attachColumnFilterListeners() {
-      document.querySelectorAll('.col-filter').forEach(input => {
-        input.removeEventListener('input', onFilterInput);
-        input.addEventListener('input', onFilterInput);
+    function restoreSelections(tableId, storageKey) {
+      const sent = JSON.parse(localStorage.getItem(storageKey)||'[]');
+      document.querySelectorAll(`#${tableId} tbody tr`).forEach(tr => {
+        tr.querySelector('input[type=checkbox]').checked = false;
+        if (sent.includes(tr.dataset.key)) {
+          tr.classList.add('table-warning');
+        } else {
+          tr.classList.remove('table-warning');
+        }
       });
     }
-    function onFilterInput() {
-      renderOKDetailsTable();
-      renderKOTable();
-      renderNonFirmatiTable();
+
+    function persistSelections(tableId, storageKey) {
+      let sent = JSON.parse(localStorage.getItem(storageKey)||'[]');
+      document.querySelectorAll(`#${tableId} tbody input:checked`).forEach(cb => {
+        const key = cb.closest('tr').dataset.key;
+        if (!sent.includes(key)) sent.push(key);
+      });
+      localStorage.setItem(storageKey, JSON.stringify(sent));
+      restoreSelections(tableId, storageKey);
     }
 
-    /** 
-     * Compone il testo della mail:
-     * intro (fisso), poi ogni campo Label: **valore** solo se presente
-     */
+    function sendKOEmail() {
+      const rows = applyColumnFilters(workbookData.filter(r => r['STATO']==='KO'),'koTable');
+      const idx = Array.from(document.querySelectorAll('#koTable tbody input:checked')).map(cb => +cb.value);
+      persistSelections('koTable','sentKoKeys');
+      const intro = "Ciao! Risultano queste pratiche in stato KO. Verifichiamo se riusciamo a recuperarle.";
+      window.location.href = `mailto:?subject=Pratiche%20KO&body=${composeEmail(rows, idx, intro)}`;
+    }
+
+    function sendNonFirmatiEmail() {
+      const rows = applyColumnFilters(workbookData.filter(r => r['STATO']==='NON FIRMATO'),'nonFirmatiTable');
+      const idx = Array.from(document.querySelectorAll('#nonFirmatiTable tbody input:checked')).map(cb => +cb.value);
+      persistSelections('nonFirmatiTable','sentNonFirmatiKeys');
+      const intro = "Ciao! Risultano queste pratiche in stato Non Firmato. Verifichiamo se riusciamo a recuperarle.";
+      window.location.href = `mailto:?subject=Pratiche%20Non%20Firmate&body=${composeEmail(rows, idx, intro)}`;
+    }
+
     function composeEmail(rows, selectedIdx, intro) {
       let body = intro + "\n\n";
       const fields = [
-        { key: 'Nome Cliente',       label: 'Nome' },
-        { key: 'Cognome Cliente',    label: 'Cognome' },
-        { key: 'STATO',              label: 'Stato' },
-        { key: 'Service Point Code', label: 'Service Point Code' },
-        { key: 'Dealer',             label: 'Dealer' },
-        { key: 'Nome opportunità',   label: 'Nome Op.' },
-        { key: 'Stato PDC',          label: 'Stato PDC' },
-        { key: 'Partita IVA',        label: 'P.IVA' },
-        { key: 'Codice Fiscale Cliente', label: 'CF' },
-        { key: 'Prestazione',        label: 'Prest.' },
-        { key: 'Stato Case',         label: 'Stato Case' },
-        { key: 'Indirizzo',          label: 'Indirizzo' },
-        { key: 'Nome Prodotto',      label: 'Prodotto' },
-        { key: 'Causale Annullamento', label: 'Causale Annullamento' },
-        { key: 'Causale Ebdm',       label: 'Causale Ebdm' }
+        { key:'Nome Cliente', label:'Nome' },
+        { key:'Cognome Cliente', label:'Cognome' },
+        { key:'STATO', label:'Stato' },
+        { key:'Service Point Code', label:'Service Point Code' },
+        { key:'Dealer', label:'Dealer' },
+        { key:'Nome opportunità', label:'Nome Op.' },
+        { key:'Stato PDC', label:'Stato PDC' },
+        { key:'Partita IVA', label:'P.IVA' },
+        { key:'Codice Fiscale Cliente', label:'CF' },
+        { key:'Prestazione', label:'Prest.' },
+        { key:'Stato Case', label:'Stato Case' },
+        { key:'Indirizzo', label:'Indirizzo' },
+        { key:'Data creazione', label:'Data creazione' },
+        { key:'Causale annullamento', label:'Causale annullamento' },
+        { key:'Causale Annullamento', label:'Causale Annullamento' },
+        { key:'Causale Ebdm', label:'Causale Ebdm' }
       ];
       selectedIdx.forEach(i => {
         const r = rows[i];
@@ -331,45 +441,6 @@
       });
       return encodeURIComponent(body);
     }
-
-    // In fondo al tuo <script>, al posto di quelli vecchi:
-
-// KO
-document.getElementById('sendEmailKo').onclick = () => {
-  // 1) Prendo SOLO le righe KO visibili (stesso filtro che uso in renderKOTable)
-  let rows = applyColumnFilters(
-    workbookData.filter(r => r['STATO'] === 'KO'),
-    'koTable'
-  );
-  // 2) Prelevo gli indici dei checkbox (sono riferiti a quell'array filtrato)
-  const idx = Array.from(
-    document.querySelectorAll('#koTable tbody input:checked')
-  ).map(cb => +cb.value);
-
-  // 3) Componiamo la mail con l'array filtrato
-  const intro = "Ciao! Risultano queste pratiche in stato KO. Verifichiamo se riusciamo a recuperarle.";
-  const body = composeEmail(rows, idx, intro);
-
-  window.location.href = `mailto:?subject=Pratiche%20KO&body=${body}`;
-};
-
-// Non Firmati
-document.getElementById('sendEmailNonFirmati').onclick = () => {
-  // 1) Soltanto le righe NON FIRMATO visibili
-  let rows = applyColumnFilters(
-    workbookData.filter(r => r['STATO'] === 'NON FIRMATO'),
-    'nonFirmatiTable'
-  );
-  const idx = Array.from(
-    document.querySelectorAll('#nonFirmatiTable tbody input:checked')
-  ).map(cb => +cb.value);
-
-  const intro = "Ciao! Risultano queste pratiche in stato Non Firmato. Verifichiamo se riusciamo a recuperarle.";
-  const body = composeEmail(rows, idx, intro);
-
-  window.location.href = `mailto:?subject=Pratiche%20Non%20Firmate&body=${body}`;
-};
-
   </script>
 </body>
 </html>
