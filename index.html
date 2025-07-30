@@ -82,8 +82,8 @@
               <th><input class="col-filter" data-field="Stato Case"       placeholder="Stato Case"></th>
               <th><input class="col-filter" data-field="Indirizzo"        placeholder="Indirizzo"></th>
               <th><input class="col-filter" data-field="Data creazione"   placeholder="Data creazione"></th>
-              <th><input class="col-filter" data-field="Causale annullamento" placeholder="Causale annullamento"></th>
-              <th><input class="col-filter" data-field="Causale Annullamento" placeholder="Causale Annullamento"></th>
+              <th><input class="col-filter" data-field="Causale annullamento" placeholder="Caus. Ann."></th>
+              <th><input class="col-filter" data-field="Causale Annullamento" placeholder="Dettaglio annull."></th>
               <th><input class="col-filter" data-field="Causale Ebdm"      placeholder="Caus. Ebdm"></th>
               <th><input class="col-filter" data-field="Service Point Code" placeholder="SP Code"></th>
             </tr>
@@ -118,8 +118,8 @@
               <th><input class="col-filter" data-field="Stato Case"       placeholder="Stato Case"></th>
               <th><input class="col-filter" data-field="Indirizzo"        placeholder="Indirizzo"></th>
               <th><input class="col-filter" data-field="Data creazione"   placeholder="Data creazione"></th>
-              <th><input class="col-filter" data-field="Causale annullamento" placeholder="Causale annullamento"></th>
-              <th><input class="col-filter" data-field="Causale Annullamento" placeholder="Causale Annullamento"></th>
+              <th><input class="col-filter" data-field="Causale annullamento" placeholder="Caus. Ann."></th>
+              <th><input class="col-filter" data-field="Causale Annullamento" placeholder="Dettaglio annull."></th>
               <th><input class="col-filter" data-field="Causale Ebdm"      placeholder="Caus. Ebdm"></th>
               <th><input class="col-filter" data-field="Service Point Code" placeholder="SP Code"></th>
             </tr>
@@ -141,7 +141,25 @@
               <th>Causale annullamento</th><th>Causale Annullamento</th>
               <th>Caus. Ebdm</th><th>SP Code</th>
             </tr>
-            <tr><!-- filtri identici --></tr>
+            <tr>
+              <th></th>
+              <th><input class="col-filter" data-field="AM"               placeholder="AM"></th>
+              <th><input class="col-filter" data-field="DEALER"           placeholder="Dealer"></th>
+              <th><input class="col-filter" data-field="Nome opportunità" placeholder="Nome Op."></th>
+              <th><input class="col-filter" data-field="Stato PDC"        placeholder="Stato PDC"></th>
+              <th><input class="col-filter" data-field="Partita IVA"      placeholder="P.IVA"></th>
+              <th><input class="col-filter" data-field="Codice Fiscale Cliente" placeholder="CF"></th>
+              <th><input class="col-filter" data-field="Nome Cliente"     placeholder="Nome"></th>
+              <th><input class="col-filter" data-field="Cognome Cliente"  placeholder="Cognome"></th>
+              <th><input class="col-filter" data-field="Prestazione"      placeholder="Prest."></th>
+              <th><input class="col-filter" data-field="Stato Case"       placeholder="Stato Case"></th>
+              <th><input class="col-filter" data-field="Indirizzo"        placeholder="Indirizzo"></th>
+              <th><input class="col-filter" data-field="Data creazione"   placeholder="Data creazione"></th>
+              <th><input class="col-filter" data-field="Causale annullamento" placeholder="Caus. Ann."></th>
+              <th><input class="col-filter" data-field="Causale Annullamento" placeholder="Dettaglio annull."></th>
+              <th><input class="col-filter" data-field="Causale Ebdm"      placeholder="Caus. Ebdm"></th>
+              <th><input class="col-filter" data-field="Service Point Code" placeholder="SP Code"></th>
+            </tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -156,30 +174,28 @@
     let workbookData = [];
 
     document.addEventListener('DOMContentLoaded', () => {
-      // 1) Legge eventuali dati da localStorage e li normalizza
       const saved = localStorage.getItem('dashboardData');
       if (saved) {
         workbookData = JSON.parse(saved);
         normalizeStatus(workbookData);
       }
 
-      // 2) Imposta event listeners
       document.getElementById('fileInput').addEventListener('change', handleFile);
       document.getElementById('filterDealerAm').addEventListener('change', renderDealer);
       document.querySelectorAll('.col-filter').forEach(inp => {
         inp.addEventListener('input', () => {
-          renderOKDetailsTable(); renderKOTable(); renderNonFirmatiTable();
+          renderOKDetailsTable();
+          renderKOTable();
+          renderNonFirmatiTable();
         });
       });
       document.getElementById('sendEmailKo').addEventListener('click', sendKOEmail);
       document.getElementById('sendEmailNonFirmati').addEventListener('click', sendNonFirmatiEmail);
 
-      // 3) Prime renderizzazioni
       populateAmFilters();
       renderAll();
     });
 
-    // Forza trim+uppercase su “STATO”
     function normalizeStatus(arr) {
       arr.forEach(r => {
         if (r['STATO'] != null) {
@@ -198,27 +214,22 @@
         });
         const ws = wb.Sheets[wb.SheetNames[0]];
         let newData = XLSX.utils.sheet_to_json(ws, { defval: '' });
-        // Normalizzo subito il campo STATO
         normalizeStatus(newData);
-        // Merge con override dei duplicati (chiave ServicePointCode||NomeOpp)
+
         const map = {};
-        // esistenti
         workbookData.forEach(r => {
           const key = r['Service Point Code'] + '||' + r['Nome opportunità'];
           map[key] = r;
         });
-        // nuovi
         newData.forEach(r => {
           const key = r['Service Point Code'] + '||' + r['Nome opportunità'];
           map[key] = r;
         });
         workbookData = Object.values(map);
 
-        // Persisto e rifaccio UI
         localStorage.setItem('dashboardData', JSON.stringify(workbookData));
         populateAmFilters();
         renderAll();
-        // Resetto input per poter ricaricare stesso file
         input.value = '';
       };
       reader.readAsArrayBuffer(input.files[0]);
@@ -235,8 +246,7 @@
     function populateAmFilters() {
       const ams = Array.from(new Set(workbookData.map(r => r['AM']))).filter(a => a);
       document.getElementById('filterDealerAm').innerHTML =
-        '<option value="">Tutti AM</option>' +
-        ams.map(a => `<option>${a}</option>`).join('');
+        '<option value="">Tutti AM</option>' + ams.map(a => `<option>${a}</option>`).join('');
     }
 
     function formatDate(v) {
@@ -259,8 +269,7 @@
     function renderDealer() {
       const amVal = document.getElementById('filterDealerAm').value;
       const ok = workbookData.filter(r =>
-        r['STATO'] === 'OK' &&
-        (amVal === '' || r['AM'] === amVal)
+        r['STATO'] === 'OK' && (amVal === '' || r['AM'] === amVal)
       );
       const cnt = {};
       ok.forEach(r => {
@@ -423,3 +432,4 @@
   </script>
 </body>
 </html>
+
