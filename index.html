@@ -25,6 +25,7 @@
 <body class="p-4">
   <div class="container">
     <h1 class="mb-4 text-center" style="color: var(--tiffany)">Dashboard Pratiche ACEA</h1>
+
     <div class="mb-4">
       <label for="fileInput" class="form-label">Carica file Excel</label>
       <input type="file" id="fileInput" class="form-control" accept=".xlsx">
@@ -172,43 +173,33 @@
     let workbookData = [];
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Carica da localStorage (ma verrà subito sovrascritto al nuovo file)
-      const saved = localStorage.getItem('dashboardData');
-      if (saved) {
-        workbookData = JSON.parse(saved);
-        normalizeStatus(workbookData);
-      }
-
-      // Listeners
+      // Non carichiamo più workbookData da localStorage: si popola solo alla scelta del file.
       document.getElementById('fileInput').addEventListener('change', handleFile);
       document.getElementById('filterDealerAm').addEventListener('change', renderDealer);
-      document.querySelectorAll('.col-filter').forEach(inp => {
+
+      document.querySelectorAll('.col-filter').forEach(inp =>
         inp.addEventListener('input', () => {
           renderOKDetailsTable();
           renderKOTable();
           renderNonFirmatiTable();
-        });
-      });
+        })
+      );
+
       document.getElementById('sendEmailKo').addEventListener('click', sendKOEmail);
       document.getElementById('sendEmailNonFirmati').addEventListener('click', sendNonFirmatiEmail);
-
-      // Prime render
-      populateAmFilters();
-      renderAll();
     });
 
-    // Normalizza STATO (trim + uppercase)
+    // Normalizza STATO (trim+uppercase)
     function normalizeStatus(arr) {
       arr.forEach(r => {
         if (r['STATO'] != null) {
-          r['STATO'] = r['STATO'].toString().trim().toUpperCase();
+          r['STATO'] = String(r['STATO']).trim().toUpperCase();
         }
       });
     }
 
-    // Sovrascrive completamente i dati con l'ultimo file caricato
+    // Legge l’Excel e popola workbookData
     function handleFile(e) {
-      const input = e.target;
       const reader = new FileReader();
       reader.onload = ev => {
         const wb = XLSX.read(new Uint8Array(ev.target.result), {
@@ -216,97 +207,94 @@
           cellDates: true
         });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        // Legge solo il nuovo foglio
-        let newData = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        const newData = XLSX.utils.sheet_to_json(ws, { defval: '' });
         normalizeStatus(newData);
-        // Sovrascrive interamente
-        workbookData = newData;
-        // Persisti
-        localStorage.setItem('dashboardData', JSON.stringify(workbookData));
-        // Azzera selezioni precedenti
-        localStorage.setItem('sentOkKeys',        JSON.stringify([]));
-        localStorage.setItem('sentKoKeys',        JSON.stringify([]));
-        localStorage.setItem('sentNonFirmatiKeys',JSON.stringify([]));
-        // Aggiorna UI
-        populateAmFilters();
-        renderAll();
-        // Reset file input per poter ri-caricare anche lo stesso file
-        input.value = '';
-      };
-      reader.readAsArrayBuffer(input.files[0]);
-    }
 
-    function renderAll() {
-      renderDealer();
-      renderManager();
-      renderOKDetailsTable();
-      renderKOTable();
-      renderNonFirmatiTable();
+        // Sovrascrivo completamente
+        workbookData = newData;
+
+        // Resetto tutti i filtri in UI
+        document.getElementById('filterDealerAm').value = '';
+        document.querySelectorAll('.col-filter').forEach(i => i.value = '');
+
+        // Ricostruisco tutti i pannelli
+        populateAmFilters();
+        renderDealer();
+        renderManager();
+        renderOKDetailsTable();
+        renderKOTable();
+        renderNonFirmatiTable();
+      };
+      reader.readAsArrayBuffer(e.target.files[0]);
+      // in modo da poter ricaricare lo stesso file
+      e.target.value = '';
     }
 
     function populateAmFilters() {
-      const ams = Array.from(new Set(workbookData.map(r => r['AM']))).filter(a => a);
-      document.getElementById('filterDealerAm').innerHTML =
-        '<option value="">Tutti AM</option>' +
-        ams.map(a => `<option>${a}</option>`).join('');
+      const ams = Array.from(new Set(workbookData.map(r => r['AM']).filter(x=>x)));
+      const select = document.getElementById('filterDealerAm');
+      select.innerHTML = '<option value="">Tutti AM</option>' + ams.map(a=>`<option>${a}</option>`).join('');
     }
 
     function formatDate(v) {
       return v instanceof Date ? v.toLocaleDateString('it-IT') : v;
     }
 
-    function applyColumnFilters(rows, tableId) {
-      const filters = {};
-      document.querySelectorAll(`#${tableId} thead .col-filter`).forEach(i => {
+    function applyFilters(rows, tableId) {
+      const f = {};
+      document.querySelectorAll(`#${tableId} thead .col-filter`).forEach(i=>{
         const v = i.value.trim().toLowerCase();
-        if (v) filters[i.dataset.field] = v;
+        if (v) f[i.dataset.field] = v;
       });
       return rows.filter(r =>
-        Object.entries(filters).every(([k,v]) =>
+        Object.entries(f).every(([k,v]) =>
           String(r[k]||'').toLowerCase().includes(v)
         )
       );
     }
 
+    // Classifica Negozi OK
     function renderDealer() {
       const amVal = document.getElementById('filterDealerAm').value;
-      const okRows = workbookData.filter(r =>
+      const rows = workbookData.filter(r=>
         r['STATO']==='OK' && (amVal===''||r['AM']===amVal)
       );
       const cnt = {};
-      okRows.forEach(r => {
+      rows.forEach(r=>{
         const key = `${r.DEALER}||${r.AM}`;
-        cnt[key] = (cnt[key]||0) + 1;
+        cnt[key] = (cnt[key]||0)+1;
       });
       const arr = Object.entries(cnt).map(([k,c])=>{
         const [dealer,am] = k.split('||');
         return { dealer, am, count:c };
       }).sort((a,b)=>b.count-a.count);
+
       document.getElementById('dealerTable').innerHTML =
-        '<thead><tr><th>#</th><th>Dealer</th><th>AM</th><th>OK</th></tr></thead>' +
-        '<tbody>' + arr.map((d,i)=>
-          `<tr><td>${i+1}</td><td>${d.dealer}</td><td>${d.am}</td><td>${d.count}</td></tr>`
-        ).join('') + '</tbody>';
+        `<thead><tr><th>#</th><th>Dealer</th><th>AM</th><th>OK</th></tr></thead>
+         <tbody>${arr.map((d,i)=>
+            `<tr><td>${i+1}</td><td>${d.dealer}</td><td>${d.am}</td><td>${d.count}</td></tr>`
+         ).join('')}</tbody>`;
     }
 
+    // Classifica AM OK
     function renderManager() {
-      const ok = workbookData.filter(r=>r['STATO']==='OK');
+      const rows = workbookData.filter(r=>r['STATO']==='OK');
       const cnt = {};
-      ok.forEach(r=>cnt[r['AM']]=(cnt[r['AM']]||0)+1);
+      rows.forEach(r=> cnt[r['AM']] = (cnt[r['AM']]||0)+1 );
       const arr = Object.entries(cnt).map(([am,c])=>({am,count:c}))
                     .sort((a,b)=>b.count-a.count);
+
       document.getElementById('managerTable').innerHTML =
-        '<thead><tr><th>#</th><th>AM</th><th>OK</th></tr></thead>' +
-        '<tbody>' + arr.map((d,i)=>
-          `<tr><td>${i+1}</td><td>${d.am}</td><td>${d.count}</td></tr>`
-        ).join('') + '</tbody>';
+        `<thead><tr><th>#</th><th>AM</th><th>OK</th></tr></thead>
+         <tbody>${arr.map((d,i)=>
+            `<tr><td>${i+1}</td><td>${d.am}</td><td>${d.count}</td></tr>`
+         ).join('')}</tbody>`;
     }
 
+    // Tabella Pratiche OK
     function renderOKDetailsTable() {
-      const rows = applyColumnFilters(
-        workbookData.filter(r=>r['STATO']==='OK'),
-        'okDetailsTable'
-      );
+      let rows = workbookData.filter(r=>r['STATO']==='OK');
+      rows = applyFilters(rows,'okDetailsTable');
       document.querySelector('#okDetailsTable tbody').innerHTML =
         rows.map((r,i)=>`
         <tr data-key="${r['Service Point Code']}-${r['Nome opportunità']}">
@@ -317,17 +305,18 @@
           <td>${r['Cognome Cliente']}</td><td>${r['Prestazione']}</td>
           <td>${r['Stato Case']}</td><td>${r.Indirizzo}</td>
           <td>${formatDate(r['Data creazione'])}</td>
-          <td>${r['Causale annullamento']}</td><td>${r['Causale Annullamento']}</td>
-          <td>${r['Causale Ebdm']}</td><td>${r['Service Point Code']}</td>
+          <td>${r['Causale annullamento']}</td>
+          <td>${r['Causale Annullamento']}</td>
+          <td>${r['Causale Ebdm']}</td>
+          <td>${r['Service Point Code']}</td>
         </tr>`).join('');
-      restoreSelections('okDetailsTable','sentOkKeys');
+      restore('okDetailsTable','sentOkKeys');
     }
 
+    // Tabella KO
     function renderKOTable() {
-      const rows = applyColumnFilters(
-        workbookData.filter(r=>r['STATO']==='KO'),
-        'koTable'
-      );
+      let rows = workbookData.filter(r=>r['STATO']==='KO');
+      rows = applyFilters(rows,'koTable');
       document.querySelector('#koTable tbody').innerHTML =
         rows.map((r,i)=>`
         <tr data-key="${r['Service Point Code']}-${r['Nome opportunità']}">
@@ -338,17 +327,18 @@
           <td>${r['Cognome Cliente']}</td><td>${r['Prestazione']}</td>
           <td>${r['Stato Case']}</td><td>${r.Indirizzo}</td>
           <td>${formatDate(r['Data creazione'])}</td>
-          <td>${r['Causale annullamento']}</td><td>${r['Causale Annullamento']}</td>
-          <td>${r['Causale Ebdm']}</td><td>${r['Service Point Code']}</td>
+          <td>${r['Causale annullamento']}</td>
+          <td>${r['Causale Annullamento']}</td>
+          <td>${r['Causale Ebdm']}</td>
+          <td>${r['Service Point Code']}</td>
         </tr>`).join('');
-      restoreSelections('koTable','sentKoKeys');
+      restore('koTable','sentKoKeys');
     }
 
+    // Tabella Non Firmati
     function renderNonFirmatiTable() {
-      const rows = applyColumnFilters(
-        workbookData.filter(r=>r['STATO']==='NON FIRMATO'),
-        'nonFirmatiTable'
-      );
+      let rows = workbookData.filter(r=>r['STATO']==='NON FIRMATO');
+      rows = applyFilters(rows,'nonFirmatiTable');
       document.querySelector('#nonFirmatiTable tbody').innerHTML =
         rows.map((r,i)=>`
         <tr data-key="${r['Service Point Code']}-${r['Nome opportunità']}">
@@ -359,73 +349,75 @@
           <td>${r['Cognome Cliente']}</td><td>${r['Prestazione']}</td>
           <td>${r['Stato Case']}</td><td>${r.Indirizzo}</td>
           <td>${formatDate(r['Data creazione'])}</td>
-          <td>${r['Causale annullamento']}</td><td>${r['Causale Annullamento']}</td>
-          <td>${r['Causale Ebdm']}</td><td>${r['Service Point Code']}</td>
+          <td>${r['Causale annullamento']}</td>
+          <td>${r['Causale Annullamento']}</td>
+          <td>${r['Causale Ebdm']}</td>
+          <td>${r['Service Point Code']}</td>
         </tr>`).join('');
-      restoreSelections('nonFirmatiTable','sentNonFirmatiKeys');
+      restore('nonFirmatiTable','sentNonFirmatiKeys');
     }
 
-    function restoreSelections(tableId, storageKey) {
-      const sent = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    // Mantengo evidenziazioni gialle
+    function restore(tableId, storageKey) {
+      const sent = JSON.parse(localStorage.getItem(storageKey)||'[]');
       document.querySelectorAll(`#${tableId} tbody tr`).forEach(tr=>{
         tr.querySelector('input[type=checkbox]').checked = false;
         tr.classList.toggle('table-warning', sent.includes(tr.dataset.key));
       });
     }
 
-    function persistSelections(tableId, storageKey) {
-      let sent = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    // Salvo le selezioni come “inviate”
+    function persist(tableId, storageKey) {
+      let sent = JSON.parse(localStorage.getItem(storageKey)||'[]');
       document.querySelectorAll(`#${tableId} tbody input:checked`).forEach(cb=>{
         const key = cb.closest('tr').dataset.key;
         if (!sent.includes(key)) sent.push(key);
       });
       localStorage.setItem(storageKey, JSON.stringify(sent));
-      restoreSelections(tableId, storageKey);
+      restore(tableId,storageKey);
     }
 
     function sendKOEmail() {
-      const rows = applyColumnFilters(workbookData.filter(r=>r['STATO']==='KO'),'koTable');
+      const rows = applyFilters(workbookData.filter(r=>r['STATO']==='KO'),'koTable');
       const idx  = Array.from(document.querySelectorAll('#koTable tbody input:checked')).map(cb=>+cb.value);
-      persistSelections('koTable','sentKoKeys');
+      persist('koTable','sentKoKeys');
       const intro = "Ciao! Risultano queste pratiche in stato KO. Verifichiamo se riusciamo a recuperarle.";
-      window.location.href = `mailto:?subject=Pratiche%20KO&body=${composeEmail(rows,idx,intro)}`;
+      window.location.href = `mailto:?subject=Pratiche%20KO&body=${compose(rows,idx,intro)}`;
     }
 
     function sendNonFirmatiEmail() {
-      const rows = applyColumnFilters(workbookData.filter(r=>r['STATO']==='NON FIRMATO'),'nonFirmatiTable');
+      const rows = applyFilters(workbookData.filter(r=>r['STATO']==='NON FIRMATO'),'nonFirmatiTable');
       const idx  = Array.from(document.querySelectorAll('#nonFirmatiTable tbody input:checked')).map(cb=>+cb.value);
-      persistSelections('nonFirmatiTable','sentNonFirmatiKeys');
+      persist('nonFirmatiTable','sentNonFirmatiKeys');
       const intro = "Ciao! Risultano queste pratiche in stato Non Firmato. Verifichiamo se riusciamo a recuperarle.";
-      window.location.href = `mailto:?subject=Pratiche%20Non%20Firmate&body=${composeEmail(rows,idx,intro)}`;
+      window.location.href = `mailto:?subject=Pratiche%20Non%20Firmate&body=${compose(rows,idx,intro)}`;
     }
 
-    function composeEmail(rows, selectedIdx, intro) {
+    function compose(rows, selectedIdx, intro) {
       let body = intro + "\n\n";
       const fields = [
-        { key:'Nome Cliente',           label:'Nome' },
-        { key:'Cognome Cliente',        label:'Cognome' },
-        { key:'STATO',                  label:'Stato' },
-        { key:'Service Point Code',     label:'Service Point Code' },
-        { key:'Dealer',                 label:'Dealer' },
-        { key:'Nome opportunità',       label:'Nome Op.' },
-        { key:'Stato PDC',              label:'Stato PDC' },
-        { key:'Partita IVA',            label:'P.IVA' },
+        { key:'Nome Cliente',        label:'Nome' },
+        { key:'Cognome Cliente',     label:'Cognome' },
+        { key:'STATO',               label:'Stato' },
+        { key:'Service Point Code',  label:'Service Point Code' },
+        { key:'Dealer',              label:'Dealer' },
+        { key:'Nome opportunità',    label:'Nome Op.' },
+        { key:'Stato PDC',           label:'Stato PDC' },
+        { key:'Partita IVA',         label:'P.IVA' },
         { key:'Codice Fiscale Cliente', label:'CF' },
-        { key:'Prestazione',            label:'Prest.' },
-        { key:'Stato Case',             label:'Stato Case' },
-        { key:'Indirizzo',              label:'Indirizzo' },
-        { key:'Data creazione',         label:'Data creazione' },
-        { key:'Causale annullamento',   label:'Caus. Ann.' },
-        { key:'Causale Annullamento',   label:'Dettaglio annull.' },
-        { key:'Causale Ebdm',           label:'Caus. Ebdm' }
+        { key:'Prestazione',         label:'Prest.' },
+        { key:'Stato Case',          label:'Stato Case' },
+        { key:'Indirizzo',           label:'Indirizzo' },
+        { key:'Data creazione',      label:'Data creazione' },
+        { key:'Causale annullamento',label:'Caus. Ann.' },
+        { key:'Causale Annullamento',label:'Dettaglio ann.' },
+        { key:'Causale Ebdm',        label:'Caus. Ebdm' }
       ];
       selectedIdx.forEach(i => {
         const r = rows[i];
         fields.forEach(f => {
           const v = r[f.key];
-          if (v !== undefined && v !== '') {
-            body += `${f.label}: **${v}**\n`;
-          }
+          if (v) body += `${f.label}: **${v}**\n`;
         });
         body += "\n";
       });
@@ -434,5 +426,3 @@
   </script>
 </body>
 </html>
-
-
