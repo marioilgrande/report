@@ -423,6 +423,130 @@
       });
       return encodeURIComponent(body);
     }
+
+    /* =========================================================
+       AGGIUNTA: AVANZAMENTO WHATSAPP (senza toccare le funzioni)
+    ========================================================= */
+
+    let lastFileDateStr = '';
+
+    // Listener aggiuntivo: prende la data dal nome file (senza modificare handleFile)
+    document.addEventListener('DOMContentLoaded', () => {
+      const fileInput = document.getElementById('fileInput');
+      if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+          const f = e.target.files && e.target.files[0];
+          if (f && f.name) lastFileDateStr = parseDateFromFilename(f.name);
+          else lastFileDateStr = today();
+        }, true);
+      }
+
+      // Patch non invasiva: ogni volta che dealerTable cambia, aggiungo colonna + pulsanti
+      const dealerTable = document.getElementById('dealerTable');
+      if (dealerTable) {
+        const obs = new MutationObserver(() => {
+          try { enhanceDealerTableWithAvanzamento(); } catch(_) {}
+        });
+        obs.observe(dealerTable, { childList: true, subtree: true });
+      }
+    });
+
+    function enhanceDealerTableWithAvanzamento() {
+      const tbl = document.getElementById('dealerTable');
+      if (!tbl) return;
+
+      const theadRow = tbl.querySelector('thead tr');
+      const tbodyRows = tbl.querySelectorAll('tbody tr');
+      if (!theadRow || !tbodyRows.length) return;
+
+      // Se già presente, non duplico
+      const already = Array.from(theadRow.children).some(th => th.textContent.trim().toLowerCase() === 'invia avanzamento');
+      if (!already) {
+        const th = document.createElement('th');
+        th.textContent = 'Invia avanzamento';
+        theadRow.appendChild(th);
+      }
+
+      tbodyRows.forEach(tr => {
+        // Se la riga ha già la cella, skip
+        if (tr.dataset.hasAvanzamento === '1') return;
+
+        const tds = tr.querySelectorAll('td');
+        // Attesi: #, Dealer, AM, OK
+        if (tds.length < 4) return;
+
+        const dealer = (tds[1].textContent || '').trim();
+        const ok = parseInt((tds[3].textContent || '0').trim(), 10) || 0;
+
+        const td = document.createElement('td');
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-tiffany btn-sm';
+        btn.type = 'button';
+        btn.textContent = 'Invia avanzamento';
+        btn.addEventListener('click', () => sendAvanzamento(dealer, ok));
+
+        td.appendChild(btn);
+        tr.appendChild(td);
+        tr.dataset.hasAvanzamento = '1';
+      });
+    }
+
+    function sendAvanzamento(dealer, ok){
+      let soglia = 1;
+      let next = null;
+      let limit = 0;
+
+      if (ok >= 25){
+        soglia = 4;
+        next = null;
+      } else if (ok >= 15){
+        soglia = 3;
+        next = 25;
+        limit = 5;
+      } else if (ok >= 5){
+        soglia = 2;
+        next = 15;
+        limit = 5;
+      } else {
+        soglia = 1;
+        next = 5;
+        limit = 2;
+      }
+
+      const dateStr = lastFileDateStr || today();
+
+      let msg =
+`Ciao! Ecco avanzamento al: ${dateStr}
+${dealer} - ${ok} pezzi
+Attualmente sei in soglia ${soglia}`;
+
+      if (soglia !== 4 && next !== null && (next - ok) > 0 && (next - ok) <= limit){
+        msg += `\nMancano ${next - ok} pezzi per aumentare i tuoi guadagni`;
+      }
+
+      msg += `\n\nQueste sono le soglie di gara:
+1 - 5 - 15 - 25`;
+
+      window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+    }
+
+    function parseDateFromFilename(name){
+      // Prendo le ultime 1-2 cifre prima dell'estensione (o fine stringa)
+      const base = String(name || '').replace(/\.[^/.]+$/, '');
+      const m = base.match(/(\d{1,2})\s*$/);
+      if(!m) return today();
+
+      const dd = String(m[1]).padStart(2,'0');
+      // Coerente con la tua logica precedente: mese fisso /12 se il nome file contiene solo il giorno
+      return dd + '/12';
+    }
+
+    function today(){
+      const d = new Date();
+      return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
+    }
+
+    /* ========================================================= */
   </script>
 </body>
 </html>
