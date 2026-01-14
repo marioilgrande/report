@@ -491,44 +491,55 @@
       });
     }
 
-    function sendAvanzamento(dealer, ok){
-      let soglia = 1;
-      let next = null;
-      let limit = 0;
+/* =========================================================
+   PATCH: AGGIORNAMENTO SOGLIE GARA AVANZAMENTO WHATSAPP
+   Nuove soglie: 1 - 5 - 15 - 30 - 55
+   (modifica SOLO questa parte: sendAvanzamento + testo soglie)
+========================================================= */
 
-      if (ok >= 25){
-        soglia = 4;
-        next = null;
-      } else if (ok >= 15){
-        soglia = 3;
-        next = 25;
-        limit = 5;
-      } else if (ok >= 5){
-        soglia = 2;
-        next = 15;
-        limit = 5;
-      } else {
-        soglia = 1;
-        next = 5;
-        limit = 2;
-      }
+function sendAvanzamento(dealer, ok){
+  let soglia = 1;
+  let next = null;
+  let limit = 0;
 
-      const dateStr = lastFileDateStr || today();
+  if (ok >= 55){
+    soglia = 5;
+    next = null;
+  } else if (ok >= 30){
+    soglia = 4;
+    next = 55;
+    limit = 10;   // “mancano…” solo se entro 10 pezzi dal prossimo step
+  } else if (ok >= 15){
+    soglia = 3;
+    next = 30;
+    limit = 5;    // entro 5 pezzi
+  } else if (ok >= 5){
+    soglia = 2;
+    next = 15;
+    limit = 5;    // entro 5 pezzi
+  } else {
+    soglia = 1;
+    next = 5;
+    limit = 2;    // entro 2 pezzi
+  }
 
-      let msg =
+  const dateStr = lastFileDateStr || today();
+
+  let msg =
 `Ciao! Ecco avanzamento al: ${dateStr}
 ${dealer} - ${ok} pezzi
 Attualmente sei in soglia ${soglia}`;
 
-      if (soglia !== 4 && next !== null && (next - ok) > 0 && (next - ok) <= limit){
-        msg += `\nMancano ${next - ok} pezzi per aumentare i tuoi guadagni`;
-      }
+  if (next !== null && (next - ok) > 0 && (next - ok) <= limit){
+    msg += `\nMancano ${next - ok} pezzi per aumentare i tuoi guadagni`;
+  }
 
-      msg += `\n\nQueste sono le soglie di gara:
-1 - 5 - 15 - 25`;
+  msg += `\n\nQueste sono le soglie di gara:
+1 - 5 - 15 - 30 - 55`;
 
-      window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
-    }
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+
 
     function parseDateFromFilename(name){
       // Prendo le ultime 1-2 cifre prima dell'estensione (o fine stringa)
