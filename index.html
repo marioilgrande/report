@@ -8,6 +8,8 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <!-- ExcelJS per export formattato -->
+  <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
   <style>
     :root { --tiffany: #0abab5; }
     .nav-tabs .nav-link.active {
@@ -59,7 +61,10 @@
 
       <!-- Pratiche OK -->
       <div class="tab-pane fade" id="tab-ok-details">
-        <h4 class="text-tiffany mb-2">Elenco Pratiche OK</h4>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h4 class="text-tiffany mb-0">Elenco Pratiche OK</h4>
+          <button id="exportOkExcelBtn" class="btn btn-tiffany btn-sm">Esporta Pratiche OK</button>
+        </div>
         <table id="okDetailsTable" class="table table-bordered">
           <thead>
             <tr>
@@ -70,21 +75,21 @@
             </tr>
             <tr>
               <th></th>
-              <th><input class="col-filter" data-field="AM"               placeholder="AM"></th>
-              <th><input class="col-filter" data-field="DEALER"           placeholder="Dealer"></th>
+              <th><input class="col-filter" data-field="AM" placeholder="AM"></th>
+              <th><input class="col-filter" data-field="DEALER" placeholder="Dealer"></th>
               <th><input class="col-filter" data-field="Nome opportunità" placeholder="Nome Op."></th>
-              <th><input class="col-filter" data-field="Stato PDC"        placeholder="Stato PDC"></th>
-              <th><input class="col-filter" data-field="Partita IVA"      placeholder="P.IVA"></th>
+              <th><input class="col-filter" data-field="Stato PDC" placeholder="Stato PDC"></th>
+              <th><input class="col-filter" data-field="Partita IVA" placeholder="P.IVA"></th>
               <th><input class="col-filter" data-field="Codice Fiscale Cliente" placeholder="CF"></th>
-              <th><input class="col-filter" data-field="Nome Cliente"     placeholder="Nome"></th>
-              <th><input class="col-filter" data-field="Cognome Cliente"  placeholder="Cognome"></th>
-              <th><input class="col-filter" data-field="Prestazione"      placeholder="Prest."></th>
-              <th><input class="col-filter" data-field="Stato Case"       placeholder="Stato Case"></th>
-              <th><input class="col-filter" data-field="Indirizzo"        placeholder="Indirizzo"></th>
-              <th><input class="col-filter" data-field="Data creazione"   placeholder="Data creazione"></th>
+              <th><input class="col-filter" data-field="Nome Cliente" placeholder="Nome"></th>
+              <th><input class="col-filter" data-field="Cognome Cliente" placeholder="Cognome"></th>
+              <th><input class="col-filter" data-field="Prestazione" placeholder="Prest."></th>
+              <th><input class="col-filter" data-field="Stato Case" placeholder="Stato Case"></th>
+              <th><input class="col-filter" data-field="Indirizzo" placeholder="Indirizzo"></th>
+              <th><input class="col-filter" data-field="Data creazione" placeholder="Data creazione"></th>
               <th><input class="col-filter" data-field="Causale annullamento" placeholder="Caus. Ann."></th>
               <th><input class="col-filter" data-field="Causale Annullamento" placeholder="Dettaglio annull."></th>
-              <th><input class="col-filter" data-field="Causale Ebdm"      placeholder="Caus. Ebdm"></th>
+              <th><input class="col-filter" data-field="Causale Ebdm" placeholder="Caus. Ebdm"></th>
               <th><input class="col-filter" data-field="Service Point Code" placeholder="SP Code"></th>
             </tr>
           </thead>
@@ -105,21 +110,21 @@
             </tr>
             <tr>
               <th></th>
-              <th><input class="col-filter" data-field="AM"               placeholder="AM"></th>
-              <th><input class="col-filter" data-field="DEALER"           placeholder="Dealer"></th>
+              <th><input class="col-filter" data-field="AM" placeholder="AM"></th>
+              <th><input class="col-filter" data-field="DEALER" placeholder="Dealer"></th>
               <th><input class="col-filter" data-field="Nome opportunità" placeholder="Nome Op."></th>
-              <th><input class="col-filter" data-field="Stato PDC"        placeholder="Stato PDC"></th>
-              <th><input class="col-filter" data-field="Partita IVA"      placeholder="P.IVA"></th>
+              <th><input class="col-filter" data-field="Stato PDC" placeholder="Stato PDC"></th>
+              <th><input class="col-filter" data-field="Partita IVA" placeholder="P.IVA"></th>
               <th><input class="col-filter" data-field="Codice Fiscale Cliente" placeholder="CF"></th>
-              <th><input class="col-filter" data-field="Nome Cliente"     placeholder="Nome"></th>
-              <th><input class="col-filter" data-field="Cognome Cliente"  placeholder="Cognome"></th>
-              <th><input class="col-filter" data-field="Prestazione"      placeholder="Prest."></th>
-              <th><input class="col-filter" data-field="Stato Case"       placeholder="Stato Case"></th>
-              <th><input class="col-filter" data-field="Indirizzo"        placeholder="Indirizzo"></th>
-              <th><input class="col-filter" data-field="Data creazione"   placeholder="Data creazione"></th>
+              <th><input class="col-filter" data-field="Nome Cliente" placeholder="Nome"></th>
+              <th><input class="col-filter" data-field="Cognome Cliente" placeholder="Cognome"></th>
+              <th><input class="col-filter" data-field="Prestazione" placeholder="Prest."></th>
+              <th><input class="col-filter" data-field="Stato Case" placeholder="Stato Case"></th>
+              <th><input class="col-filter" data-field="Indirizzo" placeholder="Indirizzo"></th>
+              <th><input class="col-filter" data-field="Data creazione" placeholder="Data creazione"></th>
               <th><input class="col-filter" data-field="Causale annullamento" placeholder="Caus. Ann."></th>
               <th><input class="col-filter" data-field="Causale Annullamento" placeholder="Dettaglio annull."></th>
-              <th><input class="col-filter" data-field="Causale Ebdm"      placeholder="Caus. Ebdm"></th>
+              <th><input class="col-filter" data-field="Causale Ebdm" placeholder="Caus. Ebdm"></th>
               <th><input class="col-filter" data-field="Service Point Code" placeholder="SP Code"></th>
             </tr>
           </thead>
@@ -141,21 +146,21 @@
             </tr>
             <tr>
               <th></th>
-              <th><input class="col-filter" data-field="AM"               placeholder="AM"></th>
-              <th><input class="col-filter" data-field="DEALER"           placeholder="Dealer"></th>
+              <th><input class="col-filter" data-field="AM" placeholder="AM"></th>
+              <th><input class="col-filter" data-field="DEALER" placeholder="Dealer"></th>
               <th><input class="col-filter" data-field="Nome opportunità" placeholder="Nome Op."></th>
-              <th><input class="col-filter" data-field="Stato PDC"        placeholder="Stato PDC"></th>
-              <th><input class="col-filter" data-field="Partita IVA"      placeholder="P.IVA"></th>
+              <th><input class="col-filter" data-field="Stato PDC" placeholder="Stato PDC"></th>
+              <th><input class="col-filter" data-field="Partita IVA" placeholder="P.IVA"></th>
               <th><input class="col-filter" data-field="Codice Fiscale Cliente" placeholder="CF"></th>
-              <th><input class="col-filter" data-field="Nome Cliente"     placeholder="Nome"></th>
-              <th><input class="col-filter" data-field="Cognome Cliente"  placeholder="Cognome"></th>
-              <th><input class="col-filter" data-field="Prestazione"      placeholder="Prest."></th>
-              <th><input class="col-filter" data-field="Stato Case"       placeholder="Stato Case"></th>
-              <th><input class="col-filter" data-field="Indirizzo"        placeholder="Indirizzo"></th>
-              <th><input class="col-filter" data-field="Data creazione"   placeholder="Data creazione"></th>
+              <th><input class="col-filter" data-field="Nome Cliente" placeholder="Nome"></th>
+              <th><input class="col-filter" data-field="Cognome Cliente" placeholder="Cognome"></th>
+              <th><input class="col-filter" data-field="Prestazione" placeholder="Prest."></th>
+              <th><input class="col-filter" data-field="Stato Case" placeholder="Stato Case"></th>
+              <th><input class="col-filter" data-field="Indirizzo" placeholder="Indirizzo"></th>
+              <th><input class="col-filter" data-field="Data creazione" placeholder="Data creazione"></th>
               <th><input class="col-filter" data-field="Causale annullamento" placeholder="Caus. Ann."></th>
               <th><input class="col-filter" data-field="Causale Annullamento" placeholder="Dettaglio annull."></th>
-              <th><input class="col-filter" data-field="Causale Ebdm"      placeholder="Caus. Ebdm"></th>
+              <th><input class="col-filter" data-field="Causale Ebdm" placeholder="Caus. Ebdm"></th>
               <th><input class="col-filter" data-field="Service Point Code" placeholder="SP Code"></th>
             </tr>
           </thead>
@@ -166,14 +171,12 @@
     </div>
   </div>
 
-  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
     let workbookData = [];
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Non carichiamo più workbookData da localStorage: si popola solo alla scelta del file.
       document.getElementById('fileInput').addEventListener('change', handleFile);
       document.getElementById('filterDealerAm').addEventListener('change', renderDealer);
 
@@ -187,9 +190,9 @@
 
       document.getElementById('sendEmailKo').addEventListener('click', sendKOEmail);
       document.getElementById('sendEmailNonFirmati').addEventListener('click', sendNonFirmatiEmail);
+      document.getElementById('exportOkExcelBtn').addEventListener('click', exportFilteredOKToExcel);
     });
 
-    // Normalizza STATO (trim+uppercase)
     function normalizeStatus(arr) {
       arr.forEach(r => {
         if (r['STATO'] != null) {
@@ -198,7 +201,6 @@
       });
     }
 
-    // Legge l’Excel e popola workbookData
     function handleFile(e) {
       const reader = new FileReader();
       reader.onload = ev => {
@@ -210,14 +212,11 @@
         const newData = XLSX.utils.sheet_to_json(ws, { defval: '' });
         normalizeStatus(newData);
 
-        // Sovrascrivo completamente
         workbookData = newData;
 
-        // Resetto tutti i filtri in UI
         document.getElementById('filterDealerAm').value = '';
         document.querySelectorAll('.col-filter').forEach(i => i.value = '');
 
-        // Ricostruisco tutti i pannelli
         populateAmFilters();
         renderDealer();
         renderManager();
@@ -226,7 +225,6 @@
         renderNonFirmatiTable();
       };
       reader.readAsArrayBuffer(e.target.files[0]);
-      // in modo da poter ricaricare lo stesso file
       e.target.value = '';
     }
 
@@ -253,36 +251,73 @@
       );
     }
 
-    // Classifica Negozi OK
+    function normalizeHeaderKey(str) {
+      return String(str || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
+    }
+
+    function getFieldValueFlexible(row, possibleNames) {
+      if (!row || typeof row !== 'object') return '';
+      const keys = Object.keys(row);
+      const normalizedMap = {};
+      keys.forEach(k => {
+        normalizedMap[normalizeHeaderKey(k)] = k;
+      });
+
+      for (const name of possibleNames) {
+        const normalized = normalizeHeaderKey(name);
+        if (normalizedMap[normalized] != null) {
+          return row[normalizedMap[normalized]] ?? '';
+        }
+      }
+      return '';
+    }
+
+    function getPaymentMethod(row) {
+      return getFieldValueFlexible(row, [
+        'Billing Profile: Modalità di Pagamento',
+        'billing profile: modalità di pagamento',
+        'BILLING PROFILE: MODALITÀ DI PAGAMENTO',
+        'Billing Profile Modalità di Pagamento',
+        'Modalità di Pagamento',
+        'modalità di pagamento',
+        'MODALITÀ DI PAGAMENTO',
+        'Metodo di pagamento',
+        'metodo di pagamento',
+        'METODO DI PAGAMENTO'
+      ]);
+    }
+
     function renderDealer() {
       const amVal = document.getElementById('filterDealerAm').value;
-      const rows = workbookData.filter(r=>
-        r['STATO']==='OK' && (amVal===''||r['AM']===amVal)
+      const rows = workbookData.filter(r =>
+        r['STATO'] === 'OK' && (amVal === '' || r['AM'] === amVal)
       );
       const cnt = {};
-      rows.forEach(r=>{
+      rows.forEach(r => {
         const key = `${r.DEALER}||${r.AM}`;
-        cnt[key] = (cnt[key]||0)+1;
+        cnt[key] = (cnt[key] || 0) + 1;
       });
-      const arr = Object.entries(cnt).map(([k,c])=>{
+      const arr = Object.entries(cnt).map(([k,c]) => {
         const [dealer,am] = k.split('||');
         return { dealer, am, count:c };
-      }).sort((a,b)=>b.count-a.count);
+      }).sort((a,b) => b.count - a.count);
 
       document.getElementById('dealerTable').innerHTML =
-        `<thead><tr><th>#</th><th>Dealer</th><th>AM</th><th>OK</th></tr></thead>
+        `<thead><tr><th>#</th><th>Dealer</th><th>AM</th><th>OK</th><th>Invia avanzamento</th></tr></thead>
          <tbody>${arr.map((d,i)=>
-            `<tr><td>${i+1}</td><td>${d.dealer}</td><td>${d.am}</td><td>${d.count}</td></tr>`
+            `<tr><td>${i+1}</td><td>${d.dealer}</td><td>${d.am}</td><td>${d.count}</td><td><button class="btn btn-tiffany btn-sm" onclick="sendAvanzamento('${String(d.dealer).replace(/'/g, "\\'")}', ${d.count})">Invia avanzamento</button></td></tr>`
          ).join('')}</tbody>`;
     }
 
-    // Classifica AM OK
     function renderManager() {
-      const rows = workbookData.filter(r=>r['STATO']==='OK');
+      const rows = workbookData.filter(r => r['STATO'] === 'OK');
       const cnt = {};
-      rows.forEach(r=> cnt[r['AM']] = (cnt[r['AM']]||0)+1 );
-      const arr = Object.entries(cnt).map(([am,c])=>({am,count:c}))
-                    .sort((a,b)=>b.count-a.count);
+      rows.forEach(r => cnt[r['AM']] = (cnt[r['AM']] || 0) + 1);
+      const arr = Object.entries(cnt).map(([am,c]) => ({am,count:c})).sort((a,b) => b.count - a.count);
 
       document.getElementById('managerTable').innerHTML =
         `<thead><tr><th>#</th><th>AM</th><th>OK</th></tr></thead>
@@ -291,9 +326,8 @@
          ).join('')}</tbody>`;
     }
 
-    // Tabella Pratiche OK
     function renderOKDetailsTable() {
-      let rows = workbookData.filter(r=>r['STATO']==='OK');
+      let rows = workbookData.filter(r => r['STATO'] === 'OK');
       rows = applyFilters(rows,'okDetailsTable');
       document.querySelector('#okDetailsTable tbody').innerHTML =
         rows.map((r,i)=>`
@@ -313,9 +347,8 @@
       restore('okDetailsTable','sentOkKeys');
     }
 
-    // Tabella KO
     function renderKOTable() {
-      let rows = workbookData.filter(r=>r['STATO']==='KO');
+      let rows = workbookData.filter(r => r['STATO'] === 'KO');
       rows = applyFilters(rows,'koTable');
       document.querySelector('#koTable tbody').innerHTML =
         rows.map((r,i)=>`
@@ -335,9 +368,8 @@
       restore('koTable','sentKoKeys');
     }
 
-    // Tabella Non Firmati
     function renderNonFirmatiTable() {
-      let rows = workbookData.filter(r=>r['STATO']==='NON FIRMATO');
+      let rows = workbookData.filter(r => r['STATO'] === 'NON FIRMATO');
       rows = applyFilters(rows,'nonFirmatiTable');
       document.querySelector('#nonFirmatiTable tbody').innerHTML =
         rows.map((r,i)=>`
@@ -357,37 +389,35 @@
       restore('nonFirmatiTable','sentNonFirmatiKeys');
     }
 
-    // Mantengo evidenziazioni gialle
     function restore(tableId, storageKey) {
-      const sent = JSON.parse(localStorage.getItem(storageKey)||'[]');
-      document.querySelectorAll(`#${tableId} tbody tr`).forEach(tr=>{
+      const sent = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      document.querySelectorAll(`#${tableId} tbody tr`).forEach(tr => {
         tr.querySelector('input[type=checkbox]').checked = false;
         tr.classList.toggle('table-warning', sent.includes(tr.dataset.key));
       });
     }
 
-    // Salvo le selezioni come “inviate”
     function persist(tableId, storageKey) {
-      let sent = JSON.parse(localStorage.getItem(storageKey)||'[]');
-      document.querySelectorAll(`#${tableId} tbody input:checked`).forEach(cb=>{
+      let sent = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      document.querySelectorAll(`#${tableId} tbody input:checked`).forEach(cb => {
         const key = cb.closest('tr').dataset.key;
         if (!sent.includes(key)) sent.push(key);
       });
       localStorage.setItem(storageKey, JSON.stringify(sent));
-      restore(tableId,storageKey);
+      restore(tableId, storageKey);
     }
 
     function sendKOEmail() {
-      const rows = applyFilters(workbookData.filter(r=>r['STATO']==='KO'),'koTable');
-      const idx  = Array.from(document.querySelectorAll('#koTable tbody input:checked')).map(cb=>+cb.value);
+      const rows = applyFilters(workbookData.filter(r => r['STATO'] === 'KO'),'koTable');
+      const idx  = Array.from(document.querySelectorAll('#koTable tbody input:checked')).map(cb => +cb.value);
       persist('koTable','sentKoKeys');
       const intro = "Ciao! Risultano queste pratiche in stato KO. Verifichiamo se riusciamo a recuperarle.";
       window.location.href = `mailto:?subject=Pratiche%20KO&body=${compose(rows,idx,intro)}`;
     }
 
     function sendNonFirmatiEmail() {
-      const rows = applyFilters(workbookData.filter(r=>r['STATO']==='NON FIRMATO'),'nonFirmatiTable');
-      const idx  = Array.from(document.querySelectorAll('#nonFirmatiTable tbody input:checked')).map(cb=>+cb.value);
+      const rows = applyFilters(workbookData.filter(r => r['STATO'] === 'NON FIRMATO'),'nonFirmatiTable');
+      const idx  = Array.from(document.querySelectorAll('#nonFirmatiTable tbody input:checked')).map(cb => +cb.value);
       persist('nonFirmatiTable','sentNonFirmatiKeys');
       const intro = "Ciao! Risultano queste pratiche in stato Non Firmato. Verifichiamo se riusciamo a recuperarle.";
       window.location.href = `mailto:?subject=Pratiche%20Non%20Firmate&body=${compose(rows,idx,intro)}`;
@@ -396,22 +426,22 @@
     function compose(rows, selectedIdx, intro) {
       let body = intro + "\n\n";
       const fields = [
-        { key:'Nome Cliente',        label:'Nome' },
-        { key:'Cognome Cliente',     label:'Cognome' },
-        { key:'STATO',               label:'Stato' },
-        { key:'Service Point Code',  label:'Service Point Code' },
-        { key:'Dealer',              label:'Dealer' },
-        { key:'Nome opportunità',    label:'Nome Op.' },
-        { key:'Stato PDC',           label:'Stato PDC' },
-        { key:'Partita IVA',         label:'P.IVA' },
+        { key:'Nome Cliente', label:'Nome' },
+        { key:'Cognome Cliente', label:'Cognome' },
+        { key:'STATO', label:'Stato' },
+        { key:'Service Point Code', label:'Service Point Code' },
+        { key:'Dealer', label:'Dealer' },
+        { key:'Nome opportunità', label:'Nome Op.' },
+        { key:'Stato PDC', label:'Stato PDC' },
+        { key:'Partita IVA', label:'P.IVA' },
         { key:'Codice Fiscale Cliente', label:'CF' },
-        { key:'Prestazione',         label:'Prest.' },
-        { key:'Stato Case',          label:'Stato Case' },
-        { key:'Indirizzo',           label:'Indirizzo' },
-        { key:'Data creazione',      label:'Data creazione' },
-        { key:'Causale annullamento',label:'Caus. Ann.' },
-        { key:'Causale Annullamento',label:'Dettaglio ann.' },
-        { key:'Causale Ebdm',        label:'Caus. Ebdm' }
+        { key:'Prestazione', label:'Prest.' },
+        { key:'Stato Case', label:'Stato Case' },
+        { key:'Indirizzo', label:'Indirizzo' },
+        { key:'Data creazione', label:'Data creazione' },
+        { key:'Causale annullamento', label:'Caus. Ann.' },
+        { key:'Causale Annullamento', label:'Dettaglio ann.' },
+        { key:'Causale Ebdm', label:'Caus. Ebdm' }
       ];
       selectedIdx.forEach(i => {
         const r = rows[i];
@@ -424,13 +454,10 @@
       return encodeURIComponent(body);
     }
 
-    /* =========================================================
-       AGGIUNTA: AVANZAMENTO WHATSAPP (senza toccare le funzioni)
-    ========================================================= */
+    /* ================= AVANZAMENTO WHATSAPP ================= */
 
     let lastFileDateStr = '';
 
-    // Listener aggiuntivo: prende la data dal nome file (senza modificare handleFile)
     document.addEventListener('DOMContentLoaded', () => {
       const fileInput = document.getElementById('fileInput');
       if (fileInput) {
@@ -440,116 +467,83 @@
           else lastFileDateStr = today();
         }, true);
       }
-
-      // Patch non invasiva: ogni volta che dealerTable cambia, aggiungo colonna + pulsanti
-      const dealerTable = document.getElementById('dealerTable');
-      if (dealerTable) {
-        const obs = new MutationObserver(() => {
-          try { enhanceDealerTableWithAvanzamento(); } catch(_) {}
-        });
-        obs.observe(dealerTable, { childList: true, subtree: true });
-      }
     });
 
-    function enhanceDealerTableWithAvanzamento() {
-      const tbl = document.getElementById('dealerTable');
-      if (!tbl) return;
+    function sendAvanzamento(dealer, ok){
+      let soglia = 1;
+      let next = null;
+      let limit = 0;
 
-      const theadRow = tbl.querySelector('thead tr');
-      const tbodyRows = tbl.querySelectorAll('tbody tr');
-      if (!theadRow || !tbodyRows.length) return;
-
-      // Se già presente, non duplico
-      const already = Array.from(theadRow.children).some(th => th.textContent.trim().toLowerCase() === 'invia avanzamento');
-      if (!already) {
-        const th = document.createElement('th');
-        th.textContent = 'Invia avanzamento';
-        theadRow.appendChild(th);
+      if (ok >= 55){
+        soglia = 5;
+        next = null;
+      } else if (ok >= 30){
+        soglia = 4;
+        next = 55;
+        limit = 10;
+      } else if (ok >= 15){
+        soglia = 3;
+        next = 30;
+        limit = 5;
+      } else if (ok >= 5){
+        soglia = 2;
+        next = 15;
+        limit = 5;
+      } else {
+        soglia = 1;
+        next = 5;
+        limit = 2;
       }
 
-      tbodyRows.forEach(tr => {
-        // Se la riga ha già la cella, skip
-        if (tr.dataset.hasAvanzamento === '1') return;
+      const dateStr = lastFileDateStr || today();
 
-        const tds = tr.querySelectorAll('td');
-        // Attesi: #, Dealer, AM, OK
-        if (tds.length < 4) return;
-
-        const dealer = (tds[1].textContent || '').trim();
-        const ok = parseInt((tds[3].textContent || '0').trim(), 10) || 0;
-
-        const td = document.createElement('td');
-        const btn = document.createElement('button');
-        btn.className = 'btn btn-tiffany btn-sm';
-        btn.type = 'button';
-        btn.textContent = 'Invia avanzamento';
-        btn.addEventListener('click', () => sendAvanzamento(dealer, ok));
-
-        td.appendChild(btn);
-        tr.appendChild(td);
-        tr.dataset.hasAvanzamento = '1';
-      });
-    }
-
-/* =========================================================
-   PATCH: AGGIORNAMENTO SOGLIE GARA AVANZAMENTO WHATSAPP
-   Nuove soglie: 1 - 5 - 15 - 30 - 55
-   (modifica SOLO questa parte: sendAvanzamento + testo soglie)
-========================================================= */
-
-function sendAvanzamento(dealer, ok){
-  let soglia = 1;
-  let next = null;
-  let limit = 0;
-
-  if (ok >= 55){
-    soglia = 5;
-    next = null;
-  } else if (ok >= 30){
-    soglia = 4;
-    next = 55;
-    limit = 10;   // “mancano…” solo se entro 10 pezzi dal prossimo step
-  } else if (ok >= 15){
-    soglia = 3;
-    next = 30;
-    limit = 5;    // entro 5 pezzi
-  } else if (ok >= 5){
-    soglia = 2;
-    next = 15;
-    limit = 5;    // entro 5 pezzi
-  } else {
-    soglia = 1;
-    next = 5;
-    limit = 2;    // entro 2 pezzi
-  }
-
-  const dateStr = lastFileDateStr || today();
-
-  let msg =
+      let msg =
 `Ciao! Ecco avanzamento al: ${dateStr}
 ${dealer} - ${ok} pezzi
 Attualmente sei in soglia ${soglia}`;
 
-  if (next !== null && (next - ok) > 0 && (next - ok) <= limit){
-    msg += `\nMancano ${next - ok} pezzi per aumentare i tuoi guadagni`;
-  }
+      if (next !== null && (next - ok) > 0 && (next - ok) <= limit){
+        msg += `\nMancano ${next - ok} pezzi per aumentare i tuoi guadagni`;
+      }
 
-  msg += `\n\nQueste sono le soglie di gara:
+      msg += `\n\nQueste sono le soglie di gara:
 1 - 5 - 15 - 30 - 55`;
 
-  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
-}
-
+      window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+    }
 
     function parseDateFromFilename(name){
-      // Prendo le ultime 1-2 cifre prima dell'estensione (o fine stringa)
-      const base = String(name || '').replace(/\.[^/.]+$/, '');
-      const m = base.match(/(\d{1,2})\s*$/);
-      if(!m) return today();
+      const base = String(name || '').replace(/\.[^/.]+$/, '').toLowerCase();
 
-      const dd = String(m[1]).padStart(2,'0');
-      // Coerente con la tua logica precedente: mese fisso /12 se il nome file contiene solo il giorno
-      return dd + '/12';
+      const monthMap = {
+        gennaio:'01',
+        febbraio:'02',
+        marzo:'03',
+        aprile:'04',
+        maggio:'05',
+        giugno:'06',
+        luglio:'07',
+        agosto:'08',
+        settembre:'09',
+        ottobre:'10',
+        novembre:'11',
+        dicembre:'12'
+      };
+
+      const monthMatch = base.match(/(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\s*([0-9]{1,2})$/i);
+      if (monthMatch) {
+        const mm = monthMap[monthMatch[1].toLowerCase()];
+        const dd = String(monthMatch[2]).padStart(2,'0');
+        return `${dd}/${mm}`;
+      }
+
+      const numericMatch = base.match(/([0-9]{1,2})\s*$/);
+      if (numericMatch) {
+        const dd = String(numericMatch[1]).padStart(2,'0');
+        return `${dd}/12`;
+      }
+
+      return today();
     }
 
     function today(){
@@ -557,7 +551,114 @@ Attualmente sei in soglia ${soglia}`;
       return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
     }
 
-    /* ========================================================= */
+    /* ================= EXPORT EXCEL FORMATTATO ================= */
+
+    async function exportFilteredOKToExcel() {
+      let rows = workbookData.filter(r => r['STATO'] === 'OK');
+      rows = applyFilters(rows, 'okDetailsTable');
+
+      if (!rows.length) {
+        alert('Nessuna pratica OK da esportare con i filtri attuali.');
+        return;
+      }
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Pratiche OK');
+
+      const headers = [
+        'AM', 'Dealer', 'Nome Op.', 'Stato PDC', 'P.IVA', 'CF', 'Nome', 'Cognome',
+        'Prest.', 'Stato Case', 'Indirizzo', 'Data creazione', 'Metodo di pagamento',
+        'Caus. Ann.', 'Dettaglio annull.', 'Caus. Ebdm', 'SP Code'
+      ];
+
+      worksheet.addRow(headers);
+
+      rows.forEach(r => {
+        worksheet.addRow([
+          r['AM'] || '',
+          r['DEALER'] || '',
+          r['Nome opportunità'] || '',
+          r['Stato PDC'] || '',
+          r['Partita IVA'] || '',
+          r['Codice Fiscale Cliente'] || '',
+          r['Nome Cliente'] || '',
+          r['Cognome Cliente'] || '',
+          r['Prestazione'] || '',
+          r['Stato Case'] || '',
+          r['Indirizzo'] || '',
+          formatDate(r['Data creazione']) || '',
+          getPaymentMethod(r) || '',
+          r['Causale annullamento'] || '',
+          r['Causale Annullamento'] || '',
+          r['Causale Ebdm'] || '',
+          r['Service Point Code'] || ''
+        ]);
+      });
+
+      worksheet.columns = [
+        { width: 13 },
+        { width: 18 },
+        { width: 18 },
+        { width: 15 },
+        { width: 14 },
+        { width: 27.33 },
+        { width: 16 },
+        { width: 16 },
+        { width: 19.66 },
+        { width: 16 },
+        { width: 51 },
+        { width: 16 },
+        { width: 24 },
+        { width: 18 },
+        { width: 22 },
+        { width: 32 },
+        { width: 18 }
+      ];
+
+      const headerRow = worksheet.getRow(1);
+      headerRow.height = 20;
+      headerRow.eachCell(cell => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF0ABAB5' }
+        };
+        cell.font = {
+          bold: true,
+          color: { argb: 'FFFFFFFF' }
+        };
+        cell.alignment = {
+          vertical: 'middle',
+          horizontal: 'left'
+        };
+      });
+
+      worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+      worksheet.autoFilter = {
+        from: 'A1',
+        to: 'Q1'
+      };
+
+      const dealerFilter = document.querySelector('#okDetailsTable thead .col-filter[data-field="DEALER"]')?.value?.trim() || '';
+      const safeDealer = dealerFilter
+        ? dealerFilter.replace(/[\\\/:*?"<>|]/g, '_')
+        : 'tutte';
+
+      const fileName = `pratiche_ok_${safeDealer}.xlsx`;
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    }
   </script>
 </body>
 </html>
