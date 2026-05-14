@@ -5,208 +5,1034 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Dashboard Pratiche ACEA</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
   <style>
-    :root { --tiffany: #0abab5; }
-    .nav-tabs .nav-link.active {
-      color: var(--tiffany);
-      border-color: var(--tiffany) var(--tiffany) transparent;
+    :root {
+      --tiffany: #0abab5;
+      --tiffany-dark: #06807c;
+      --tiffany-soft: #e6f9f8;
+      --bg: #f4f6f8;
+      --surface: #ffffff;
+      --text: #1f2937;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --success: #10b981;
+      --success-soft: #d1fae5;
+      --success-border: #6ee7b7;
+      --warning: #f59e0b;
+      --warning-soft: #fef3c7;
+      --danger: #ef4444;
+      --danger-soft: #fee2e2;
+      --info: #3b82f6;
+      --indigo: #6366f1;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,.06), 0 2px 4px -1px rgba(0,0,0,.04);
     }
-    .table thead { background-color: var(--tiffany); color: white; }
-    .table-warning { background-color: #fff3cd !important; }
-    .btn-tiffany { background-color: var(--tiffany); border-color: var(--tiffany); color: white; }
-    .btn-tiffany:hover { background-color: #089a94; border-color: #089a94; color: white; }
-    .col-filter { width:100%; padding:.25rem .5rem; font-size:.875rem; }
-    .search-input { max-width:300px; }
+    * { box-sizing: border-box; }
+    html, body { background: var(--bg); color: var(--text); }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* ====== TOP BAR ====== */
+    .topbar {
+      background: linear-gradient(135deg, var(--tiffany) 0%, var(--tiffany-dark) 100%);
+      color: white;
+      padding: 1.25rem 2rem;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .topbar h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+    }
+    .topbar h1 i { font-size: 1.5rem; opacity: .9; }
+    .topbar .meta {
+      font-size: .8rem;
+      opacity: .95;
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .topbar .meta .badge-file {
+      background: rgba(255,255,255,.18);
+      backdrop-filter: blur(8px);
+      padding: .35rem .75rem;
+      border-radius: 6px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+    }
+
+    /* ====== LAYOUT ====== */
+    .container-main {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 1.25rem 2rem 3rem;
+    }
+
+    /* ====== UPLOAD CARD ====== */
+    .upload-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 1.1rem 1.5rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .upload-card .upload-label {
+      font-weight: 600;
+      font-size: .9rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      margin: 0;
+    }
+    .upload-card .upload-label i { color: var(--tiffany); font-size: 1.1rem; }
+    .upload-card input[type=file] {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .45rem .65rem;
+      font-size: .85rem;
+      background: var(--bg);
+      flex: 1;
+      min-width: 280px;
+    }
+    .upload-card input[type=file]::file-selector-button {
+      background: var(--tiffany);
+      color: white;
+      border: none;
+      padding: .4rem .9rem;
+      border-radius: 6px;
+      font-weight: 500;
+      margin-right: .75rem;
+      cursor: pointer;
+      font-size: .85rem;
+    }
+    .upload-card input[type=file]::file-selector-button:hover { background: var(--tiffany-dark); }
+
+    /* ====== TOOLBAR (Global filter + Archive) ====== */
+    .controls-row {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: .85rem 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .controls-row .ctrl-label {
+      font-weight: 600;
+      font-size: .82rem;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+    .controls-row .ctrl-label i { color: var(--tiffany); font-size: 1rem; }
+    .controls-row .global-am-select {
+      max-width: 260px;
+      min-width: 200px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: .85rem;
+      padding: .4rem 2rem .4rem .75rem;
+      background-color: var(--surface);
+      flex: 0 0 auto;
+    }
+    .controls-row .global-am-select:focus {
+      border-color: var(--tiffany);
+      box-shadow: 0 0 0 2px rgba(10,186,181,.15);
+      outline: none;
+    }
+    .controls-row .divider {
+      width: 1px;
+      height: 28px;
+      background: var(--border);
+      margin: 0 .25rem;
+    }
+    .controls-row .spacer { flex: 1; }
+
+    /* ====== BANNER ARCHIVE ====== */
+    .archive-banner {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border: 1px solid #fbbf24;
+      border-radius: 12px;
+      padding: .85rem 1.25rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      color: #92400e;
+      font-weight: 500;
+      font-size: .9rem;
+      flex-wrap: wrap;
+    }
+    .archive-banner i { font-size: 1.2rem; }
+    .archive-banner .arch-info { display: flex; align-items: center; gap: .65rem; }
+
+    /* ====== KPI ====== */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: .9rem;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .kpi-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .kpi-icon.ok { background: var(--success-soft); color: var(--success); }
+    .kpi-icon.ko { background: var(--danger-soft); color: var(--danger); }
+    .kpi-icon.nf { background: #fef3c7; color: var(--warning); }
+    .kpi-icon.tot { background: var(--tiffany-soft); color: var(--tiffany-dark); }
+    .kpi-icon.am { background: #ede9fe; color: #7c3aed; }
+    .kpi-label {
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin: 0;
+    }
+    .kpi-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.1;
+      margin: 0;
+    }
+
+    /* ====== TABS ====== */
+    .nav-tabs {
+      border-bottom: 1px solid var(--border);
+      gap: .25rem;
+      margin-bottom: 0;
+    }
+    .nav-tabs .nav-link {
+      color: var(--text-muted);
+      border: 1px solid transparent;
+      border-bottom: 2px solid transparent;
+      border-radius: 8px 8px 0 0;
+      font-weight: 500;
+      font-size: .9rem;
+      padding: .6rem 1rem;
+      transition: all .15s ease;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+    .nav-tabs .nav-link i { font-size: 1rem; }
+    .nav-tabs .nav-link:hover {
+      color: var(--tiffany-dark);
+      background: var(--tiffany-soft);
+      border-color: transparent;
+    }
+    .nav-tabs .nav-link.active {
+      color: var(--tiffany-dark);
+      background: var(--surface);
+      border-color: var(--border) var(--border) var(--surface);
+      border-bottom: 2px solid var(--tiffany);
+      font-weight: 600;
+    }
+    .nav-tabs .nav-link .tab-count {
+      background: var(--bg);
+      color: var(--text-muted);
+      padding: .1rem .45rem;
+      border-radius: 10px;
+      font-size: .72rem;
+      font-weight: 600;
+      margin-left: .15rem;
+    }
+    .nav-tabs .nav-link.active .tab-count { background: var(--tiffany-soft); color: var(--tiffany-dark); }
+
+    /* ====== TAB PANEL ====== */
+    .tab-content {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 12px 12px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .tab-pane h4 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+    .panel-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: .75rem;
+      margin-bottom: 1rem;
+      padding-bottom: .75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ====== TABLES ====== */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      max-height: 70vh;
+    }
+    table.dash {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: .82rem;
+      margin: 0;
+    }
+    table.dash thead th {
+      background: #f9fafb;
+      color: var(--text);
+      font-weight: 600;
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      padding: .65rem .6rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      text-align: left;
+      white-space: nowrap;
+    }
+    table.dash thead tr.filter-row th {
+      background: var(--surface);
+      padding: .35rem .4rem;
+      top: 36px;
+      text-transform: none;
+      letter-spacing: 0;
+      font-weight: 400;
+      border-bottom: 1px solid var(--border);
+    }
+    table.dash tbody td {
+      padding: .55rem .6rem;
+      border-bottom: 1px solid #f1f3f5;
+      color: var(--text);
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    table.dash tbody tr:hover { background: #fafbfc; }
+    table.dash tbody tr:last-child td { border-bottom: none; }
+
+    /* Già inviate -> verde */
+    table.dash tbody tr.row-sent {
+      background: var(--success-soft) !important;
+      position: relative;
+    }
+    table.dash tbody tr.row-sent td:first-child {
+      box-shadow: inset 3px 0 0 var(--success);
+    }
+    table.dash tbody tr.row-sent:hover { background: #b7f0cf !important; }
+
+    /* Column filters */
+    .col-filter {
+      width: 100%;
+      padding: .3rem .55rem;
+      font-size: .78rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .col-filter:focus {
+      outline: none;
+      border-color: var(--tiffany);
+      box-shadow: 0 0 0 2px rgba(10,186,181,.15);
+      background: var(--surface);
+    }
+
+    /* Ranking tables (Dealer / Manager) */
+    table.ranking {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: .9rem;
+    }
+    table.ranking thead th {
+      background: var(--tiffany);
+      color: white;
+      font-weight: 600;
+      padding: .7rem .85rem;
+      text-align: left;
+    }
+    table.ranking thead th:first-child { border-top-left-radius: 10px; }
+    table.ranking thead th:last-child { border-top-right-radius: 10px; }
+    table.ranking tbody td {
+      padding: .6rem .85rem;
+      border-bottom: 1px solid var(--border);
+    }
+    table.ranking tbody tr:nth-child(odd) { background: #fafbfc; }
+    table.ranking tbody tr:hover { background: var(--tiffany-soft); }
+    .rank-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; height: 28px;
+      background: var(--tiffany-soft);
+      color: var(--tiffany-dark);
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: .8rem;
+    }
+    .rank-pill.top1 { background: #fef3c7; color: #b45309; }
+    .rank-pill.top2 { background: #e5e7eb; color: #4b5563; }
+    .rank-pill.top3 { background: #fed7aa; color: #c2410c; }
+    .count-pill {
+      display: inline-block;
+      background: var(--tiffany-soft);
+      color: var(--tiffany-dark);
+      padding: .2rem .6rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: .82rem;
+    }
+
+    /* Buttons */
+    .btn-tiffany {
+      background: var(--tiffany);
+      border: 1px solid var(--tiffany);
+      color: white;
+      font-weight: 500;
+      padding: .42rem .9rem;
+      border-radius: 8px;
+      font-size: .85rem;
+      transition: all .15s;
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      cursor: pointer;
+    }
+    .btn-tiffany:hover {
+      background: var(--tiffany-dark);
+      border-color: var(--tiffany-dark);
+      color: white;
+      box-shadow: 0 2px 6px rgba(10,186,181,.35);
+    }
+    .btn-tiffany:disabled, .btn-tiffany.disabled { opacity: .55; cursor: not-allowed; }
+    .btn-outline-tiffany {
+      background: transparent;
+      border: 1px solid var(--tiffany);
+      color: var(--tiffany-dark);
+      padding: .4rem .8rem;
+      border-radius: 8px;
+      font-size: .85rem;
+      font-weight: 500;
+      transition: all .15s;
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      cursor: pointer;
+    }
+    .btn-outline-tiffany:hover {
+      background: var(--tiffany);
+      color: white;
+    }
+    .btn-soft-warning {
+      background: var(--warning-soft);
+      border: 1px solid #fcd34d;
+      color: #92400e;
+      padding: .4rem .8rem;
+      border-radius: 8px;
+      font-size: .85rem;
+      font-weight: 500;
+      transition: all .15s;
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      cursor: pointer;
+    }
+    .btn-soft-warning:hover {
+      background: #fcd34d;
+      color: #78350f;
+    }
+    .btn-danger-light {
+      background: var(--danger-soft);
+      border: 1px solid #fca5a5;
+      color: #b91c1c;
+      padding: .35rem .7rem;
+      border-radius: 6px;
+      font-size: .78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+    }
+    .btn-danger-light:hover { background: #fca5a5; color: #7f1d1d; }
+
+    .form-select.am-select {
+      max-width: 240px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: .85rem;
+      padding: .35rem 2rem .35rem .75rem;
+      background-color: var(--surface);
+    }
+    .form-select.am-select:focus {
+      border-color: var(--tiffany);
+      box-shadow: 0 0 0 2px rgba(10,186,181,.15);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+    .empty-state i {
+      font-size: 2.5rem;
+      opacity: .4;
+      margin-bottom: .5rem;
+      display: block;
+    }
+    .empty-state p { margin: 0; font-size: .9rem; }
+
+    /* Result count */
+    .result-info {
+      font-size: .8rem;
+      color: var(--text-muted);
+      margin-top: .5rem;
+    }
+    .result-info strong { color: var(--text); }
+
+    .btn-wa {
+      background: #25D366;
+      color: white;
+      border: none;
+      padding: .3rem .65rem;
+      border-radius: 6px;
+      font-size: .78rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      transition: all .15s;
+      cursor: pointer;
+    }
+    .btn-wa:hover {
+      background: #1ebe5d;
+      color: white;
+      box-shadow: 0 2px 5px rgba(37,211,102,.4);
+    }
+
+    /* Scrollbar */
+    .table-wrap::-webkit-scrollbar { height: 10px; width: 10px; }
+    .table-wrap::-webkit-scrollbar-track { background: var(--bg); }
+    .table-wrap::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; }
+    .table-wrap::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 1rem;
+      font-size: .75rem;
+      color: var(--text-muted);
+      margin-top: .25rem;
+      flex-wrap: wrap;
+    }
+    .legend .swatch {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border-radius: 3px;
+      margin-right: .3rem;
+      vertical-align: middle;
+    }
+    .legend .swatch.sent { background: var(--success-soft); border: 1px solid var(--success-border); }
+
+    /* Modals */
+    .modal-header {
+      background: linear-gradient(135deg, var(--tiffany) 0%, var(--tiffany-dark) 100%);
+      color: white;
+      border-bottom: none;
+    }
+    .modal-header .btn-close { filter: invert(1); opacity: .9; }
+    .modal-content { border-radius: 14px; border: none; overflow: hidden; }
+    .modal-title { font-weight: 600; }
+
+    .email-preview {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      max-height: 50vh;
+      overflow-y: auto;
+      font-family: 'Inter', sans-serif;
+      font-size: .88rem;
+      white-space: pre-wrap;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    .email-preview strong { color: var(--tiffany-dark); font-weight: 700; }
+    .email-preview .practice-block {
+      padding: .65rem 0;
+      border-bottom: 1px dashed var(--border);
+    }
+    .email-preview .practice-block:last-child { border-bottom: none; }
+
+    .closing-list {
+      max-height: 50vh;
+      overflow-y: auto;
+    }
+    .closing-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .9rem 1.1rem;
+      margin-bottom: .65rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      transition: all .15s;
+    }
+    .closing-item:hover { border-color: var(--tiffany); box-shadow: var(--shadow-sm); }
+    .closing-item .ci-month {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--tiffany-dark);
+      text-transform: capitalize;
+    }
+    .closing-item .ci-meta {
+      font-size: .78rem;
+      color: var(--text-muted);
+      margin-top: .15rem;
+    }
+    .closing-item .ci-actions { display: flex; gap: .4rem; }
+
+    @media (max-width: 768px) {
+      .topbar { padding: 1rem; flex-direction: column; align-items: flex-start; }
+      .container-main { padding: 1rem; }
+      .panel-toolbar { flex-direction: column; align-items: stretch; }
+    }
   </style>
 </head>
-<body class="p-4">
-  <div class="container">
-    <h1 class="mb-4 text-center" style="color: var(--tiffany)">Dashboard Pratiche ACEA</h1>
+<body>
+  <!-- Top bar -->
+  <header class="topbar">
+    <h1><i class="bi bi-bar-chart-fill"></i> Dashboard Pratiche ACEA</h1>
+    <div class="meta">
+      <span id="fileBadge" class="badge-file" style="display:none"><i class="bi bi-file-earmark-spreadsheet"></i> <span id="fileBadgeName">—</span></span>
+      <span id="dateBadge" class="badge-file"><i class="bi bi-calendar3"></i> <span id="dateBadgeText">—</span></span>
+      <span id="importedBadge" class="badge-file" style="display:none"><i class="bi bi-clock-history"></i> <span id="importedBadgeText"></span></span>
+    </div>
+  </header>
 
-    <div class="mb-4">
-      <label for="fileInput" class="form-label">Carica file Excel</label>
-      <input type="file" id="fileInput" class="form-control" accept=".xlsx,.xls">
+  <div class="container-main">
+
+    <!-- Upload -->
+    <div class="upload-card">
+      <label for="fileInput" class="upload-label"><i class="bi bi-cloud-arrow-up-fill"></i> Carica file Excel (foglio "DB Acea")</label>
+      <input type="file" id="fileInput" accept=".xlsx,.xls">
+      <small class="text-muted" style="font-size:.78rem">Il file viene salvato localmente: rimane disponibile anche dopo aver aggiornato la pagina.</small>
     </div>
 
-    <ul class="nav nav-tabs mb-3">
-      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dealer">Negozi OK</button></li>
-      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-manager">Area Manager OK</button></li>
-      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ok-details">Pratiche OK</button></li>
-      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ko">Pratiche KO</button></li>
-      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-nonfirmati">Non Firmati</button></li>
+    <!-- Controls toolbar -->
+    <div class="controls-row">
+      <span class="ctrl-label"><i class="bi bi-funnel-fill"></i> Filtra dashboard</span>
+      <select id="globalAmFilter" class="global-am-select">
+        <option value="">Tutti gli Area Manager</option>
+      </select>
+      <span class="divider"></span>
+      <button id="btnSaveClosing" class="btn-outline-tiffany" title="Salva snapshot mensile del report corrente">
+        <i class="bi bi-bookmark-plus"></i> Salva chiusura mese
+      </button>
+      <button id="btnLoadClosing" class="btn-outline-tiffany" title="Carica un report di chiusura archiviato">
+        <i class="bi bi-archive"></i> Carica chiusura
+      </button>
+      <span class="spacer"></span>
+      <button id="btnClearSent" class="btn-soft-warning" title="Resetta le segnalazioni di pratiche già inviate">
+        <i class="bi bi-arrow-counterclockwise"></i> Reset righe inviate
+      </button>
+    </div>
+
+    <!-- Archive banner (hidden by default) -->
+    <div class="archive-banner" id="archiveBanner" style="display:none">
+      <div class="arch-info">
+        <i class="bi bi-archive-fill"></i>
+        <div>
+          Stai visualizzando il report di chiusura: <strong id="archiveLabel">—</strong>
+          <div style="font-size:.75rem; opacity:.85; font-weight:400">Le modifiche di upload o reset non toccano gli archivi.</div>
+        </div>
+      </div>
+      <button id="btnBackToCurrent" class="btn-tiffany">
+        <i class="bi bi-arrow-left-circle"></i> Torna al report corrente
+      </button>
+    </div>
+
+    <!-- KPI -->
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-card">
+        <div class="kpi-icon tot"><i class="bi bi-clipboard-data"></i></div>
+        <div>
+          <p class="kpi-label">Totale pratiche</p>
+          <p class="kpi-value" id="kpiTot">0</p>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon ok"><i class="bi bi-check2-circle"></i></div>
+        <div>
+          <p class="kpi-label">OK</p>
+          <p class="kpi-value" id="kpiOk">0</p>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon ko"><i class="bi bi-x-circle"></i></div>
+        <div>
+          <p class="kpi-label">KO</p>
+          <p class="kpi-value" id="kpiKo">0</p>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon nf"><i class="bi bi-pen"></i></div>
+        <div>
+          <p class="kpi-label">Non Firmati</p>
+          <p class="kpi-value" id="kpiNf">0</p>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon am"><i class="bi bi-people-fill"></i></div>
+        <div>
+          <p class="kpi-label">Area Manager</p>
+          <p class="kpi-value" id="kpiAm">0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dealer"><i class="bi bi-shop"></i> Negozi OK <span class="tab-count" id="cnt-dealer">0</span></button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-manager"><i class="bi bi-person-badge"></i> Area Manager OK <span class="tab-count" id="cnt-am">0</span></button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ok-details"><i class="bi bi-check2-circle"></i> Pratiche OK <span class="tab-count" id="cnt-ok">0</span></button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ko"><i class="bi bi-x-octagon"></i> Pratiche KO <span class="tab-count" id="cnt-ko">0</span></button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-nonfirmati"><i class="bi bi-pen"></i> Non Firmati <span class="tab-count" id="cnt-nf">0</span></button></li>
     </ul>
 
     <div class="tab-content">
+
       <!-- Negozi OK -->
       <div class="tab-pane fade show active" id="tab-dealer">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h4 class="text-tiffany">Classifica Negozi (OK)</h4>
-          <select id="filterDealerAm" class="form-select search-input">
-            <option value="">Tutti AM</option>
-          </select>
+        <div class="panel-toolbar">
+          <div>
+            <h4><i class="bi bi-trophy text-warning"></i> Classifica Negozi (OK)</h4>
+            <p class="result-info mb-0 mt-1">Ordinata per numero di pratiche OK</p>
+          </div>
         </div>
-        <table id="dealerTable" class="table table-striped"></table>
+        <div class="table-wrap" style="max-height:none">
+          <table id="dealerTable" class="ranking"></table>
+        </div>
       </div>
 
       <!-- Area Manager OK -->
       <div class="tab-pane fade" id="tab-manager">
-        <h4 class="text-tiffany">Classifica Area Manager (OK)</h4>
-        <table id="managerTable" class="table table-striped"></table>
+        <div class="panel-toolbar">
+          <div>
+            <h4><i class="bi bi-trophy text-warning"></i> Classifica Area Manager (OK)</h4>
+            <p class="result-info mb-0 mt-1">Pratiche OK aggregate per AM</p>
+          </div>
+        </div>
+        <div class="table-wrap" style="max-height:none">
+          <table id="managerTable" class="ranking"></table>
+        </div>
       </div>
 
       <!-- Pratiche OK -->
       <div class="tab-pane fade" id="tab-ok-details">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h4 class="text-tiffany mb-0">Elenco Pratiche OK</h4>
-          <button id="exportOkExcelBtn" class="btn btn-tiffany btn-sm">Esporta Pratiche OK</button>
+        <div class="panel-toolbar">
+          <div>
+            <h4><i class="bi bi-check2-circle text-success"></i> Elenco Pratiche OK</h4>
+            <div class="legend"><span><span class="swatch sent"></span>Già esportate/inviate</span></div>
+          </div>
+          <button id="exportOkExcelBtn" class="btn-tiffany"><i class="bi bi-file-earmark-excel-fill"></i> Esporta Pratiche OK</button>
         </div>
-        <table id="okDetailsTable" class="table table-bordered">
-          <thead>
-            <tr>
-              <th>Sel.</th>
-              <th>AM</th>
-              <th>Dealer</th>
-              <th>Nome Op.</th>
-              <th>Stato PDC</th>
-              <th>P.IVA</th>
-              <th>CF</th>
-              <th>Nome</th>
-              <th>Cognome</th>
-              <th>Prest.</th>
-              <th>Stato Case</th>
-              <th>Indirizzo</th>
-              <th>Data creazione</th>
-              <th>Caus. Ann.</th>
-              <th>Dettaglio annull.</th>
-              <th>Caus. Ebdm</th>
-              <th>SP Code</th>
-            </tr>
-            <tr>
-              <th></th>
-              <th><input class="col-filter" data-field="AM" placeholder="AM"></th>
-              <th><input class="col-filter" data-field="DEALER" placeholder="Dealer"></th>
-              <th><input class="col-filter" data-field="Nome opportunità" placeholder="Nome Op."></th>
-              <th><input class="col-filter" data-field="Stato PDC" placeholder="Stato PDC"></th>
-              <th><input class="col-filter" data-field="Partita IVA" placeholder="P.IVA"></th>
-              <th><input class="col-filter" data-field="Codice Fiscale Cliente" placeholder="CF"></th>
-              <th><input class="col-filter" data-field="Nome Cliente" placeholder="Nome"></th>
-              <th><input class="col-filter" data-field="Cognome Cliente" placeholder="Cognome"></th>
-              <th><input class="col-filter" data-field="Prestazione" placeholder="Prest."></th>
-              <th><input class="col-filter" data-field="Stato Case" placeholder="Stato Case"></th>
-              <th><input class="col-filter" data-field="Indirizzo" placeholder="Indirizzo"></th>
-              <th><input class="col-filter" data-field="Data creazione" placeholder="Data creazione"></th>
-              <th><input class="col-filter" data-field="Causale annullamento" placeholder="Caus. Ann."></th>
-              <th><input class="col-filter" data-field="Causale Annullamento" placeholder="Dettaglio annull."></th>
-              <th><input class="col-filter" data-field="Causale Ebdm" placeholder="Caus. Ebdm"></th>
-              <th><input class="col-filter" data-field="Service Point Code" placeholder="SP Code"></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+        <div class="table-wrap">
+          <table id="okDetailsTable" class="dash">
+            <thead>
+              <tr>
+                <th>Sel.</th>
+                <th>AM</th>
+                <th>Dealer</th>
+                <th>Nome Op.</th>
+                <th>Stato PDC</th>
+                <th>P.IVA</th>
+                <th>CF</th>
+                <th>Nome</th>
+                <th>Cognome</th>
+                <th>Prest.</th>
+                <th>Stato Case</th>
+                <th>Indirizzo</th>
+                <th>Data creazione</th>
+                <th>Caus. Ann.</th>
+                <th>Dettaglio annull.</th>
+                <th>Caus. Ebdm</th>
+                <th>SP Code</th>
+              </tr>
+              <tr class="filter-row">
+                <th></th>
+                <th><input class="col-filter" data-field="AM" placeholder="AM"></th>
+                <th><input class="col-filter" data-field="DEALER" placeholder="Dealer"></th>
+                <th><input class="col-filter" data-field="Nome opportunità" placeholder="Nome Op."></th>
+                <th><input class="col-filter" data-field="Stato PDC" placeholder="Stato PDC"></th>
+                <th><input class="col-filter" data-field="Partita IVA" placeholder="P.IVA"></th>
+                <th><input class="col-filter" data-field="Codice Fiscale Cliente" placeholder="CF"></th>
+                <th><input class="col-filter" data-field="Nome Cliente" placeholder="Nome"></th>
+                <th><input class="col-filter" data-field="Cognome Cliente" placeholder="Cognome"></th>
+                <th><input class="col-filter" data-field="Prestazione" placeholder="Prest."></th>
+                <th><input class="col-filter" data-field="Stato Case" placeholder="Stato Case"></th>
+                <th><input class="col-filter" data-field="Indirizzo" placeholder="Indirizzo"></th>
+                <th><input class="col-filter" data-field="Data creazione" placeholder="Data"></th>
+                <th><input class="col-filter" data-field="Causale annullamento" placeholder="Caus."></th>
+                <th><input class="col-filter" data-field="Causale Annullamento2" placeholder="Dettaglio"></th>
+                <th><input class="col-filter" data-field="Causale Ebdm" placeholder="Caus. Ebdm"></th>
+                <th><input class="col-filter" data-field="Service Point Code" placeholder="SP Code"></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="result-info"><strong id="okCount">0</strong> pratiche visualizzate</p>
       </div>
 
       <!-- Pratiche KO -->
       <div class="tab-pane fade" id="tab-ko">
-        <h4 class="text-tiffany mb-2">Pratiche KO</h4>
-        <table id="koTable" class="table table-bordered">
-          <thead>
-            <tr>
-              <th>Sel.</th>
-              <th>AM</th>
-              <th>Dealer</th>
-              <th>Nome Op.</th>
-              <th>Stato PDC</th>
-              <th>P.IVA</th>
-              <th>CF</th>
-              <th>Nome</th>
-              <th>Cognome</th>
-              <th>Prest.</th>
-              <th>Stato Case</th>
-              <th>Indirizzo</th>
-              <th>Data creazione</th>
-              <th>Caus. Ann.</th>
-              <th>Stato e Causale Annullamento</th>
-              <th>Causale Ebdm</th>
-              <th>Causale Annullamento2</th>
-              <th>SP Code</th>
-            </tr>
-            <tr>
-              <th></th>
-              <th><input class="col-filter" data-field="AM" placeholder="AM"></th>
-              <th><input class="col-filter" data-field="DEALER" placeholder="Dealer"></th>
-              <th><input class="col-filter" data-field="Nome opportunità" placeholder="Nome Op."></th>
-              <th><input class="col-filter" data-field="Stato PDC" placeholder="Stato PDC"></th>
-              <th><input class="col-filter" data-field="Partita IVA" placeholder="P.IVA"></th>
-              <th><input class="col-filter" data-field="Codice Fiscale Cliente" placeholder="CF"></th>
-              <th><input class="col-filter" data-field="Nome Cliente" placeholder="Nome"></th>
-              <th><input class="col-filter" data-field="Cognome Cliente" placeholder="Cognome"></th>
-              <th><input class="col-filter" data-field="Prestazione" placeholder="Prest."></th>
-              <th><input class="col-filter" data-field="Stato Case" placeholder="Stato Case"></th>
-              <th><input class="col-filter" data-field="Indirizzo" placeholder="Indirizzo"></th>
-              <th><input class="col-filter" data-field="Data creazione" placeholder="Data creazione"></th>
-              <th><input class="col-filter" data-field="Causale annullamento" placeholder="Caus. Ann."></th>
-              <th><input class="col-filter" data-field="Stato e Causale Annullamento" placeholder="Stato e Causale Ann."></th>
-              <th><input class="col-filter" data-field="Causale Ebdm" placeholder="Caus. Ebdm"></th>
-              <th><input class="col-filter" data-field="Causale Annullamento2" placeholder="Caus. Ann. 2"></th>
-              <th><input class="col-filter" data-field="Service Point Code" placeholder="SP Code"></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-        <button id="sendEmailKo" class="btn btn-tiffany mt-2">Invia KO via Email</button>
+        <div class="panel-toolbar">
+          <div>
+            <h4><i class="bi bi-x-octagon-fill text-danger"></i> Pratiche KO</h4>
+            <div class="legend"><span><span class="swatch sent"></span>Già inviate via email</span></div>
+          </div>
+          <button id="sendEmailKo" class="btn-tiffany"><i class="bi bi-envelope-fill"></i> Invia KO selezionate</button>
+        </div>
+        <div class="table-wrap">
+          <table id="koTable" class="dash">
+            <thead>
+              <tr>
+                <th>Sel.</th>
+                <th>AM</th>
+                <th>Dealer</th>
+                <th>Nome Op.</th>
+                <th>Stato PDC</th>
+                <th>P.IVA</th>
+                <th>CF</th>
+                <th>Nome</th>
+                <th>Cognome</th>
+                <th>Prest.</th>
+                <th>Stato Case</th>
+                <th>Indirizzo</th>
+                <th>Data creazione</th>
+                <th>Caus. Ann.</th>
+                <th>Stato e Causale Annullamento</th>
+                <th>Causale Ebdm</th>
+                <th>Causale Annullamento2</th>
+                <th>SP Code</th>
+              </tr>
+              <tr class="filter-row">
+                <th></th>
+                <th><input class="col-filter" data-field="AM" placeholder="AM"></th>
+                <th><input class="col-filter" data-field="DEALER" placeholder="Dealer"></th>
+                <th><input class="col-filter" data-field="Nome opportunità" placeholder="Nome Op."></th>
+                <th><input class="col-filter" data-field="Stato PDC" placeholder="Stato PDC"></th>
+                <th><input class="col-filter" data-field="Partita IVA" placeholder="P.IVA"></th>
+                <th><input class="col-filter" data-field="Codice Fiscale Cliente" placeholder="CF"></th>
+                <th><input class="col-filter" data-field="Nome Cliente" placeholder="Nome"></th>
+                <th><input class="col-filter" data-field="Cognome Cliente" placeholder="Cognome"></th>
+                <th><input class="col-filter" data-field="Prestazione" placeholder="Prest."></th>
+                <th><input class="col-filter" data-field="Stato Case" placeholder="Stato Case"></th>
+                <th><input class="col-filter" data-field="Indirizzo" placeholder="Indirizzo"></th>
+                <th><input class="col-filter" data-field="Data creazione" placeholder="Data"></th>
+                <th><input class="col-filter" data-field="Causale annullamento" placeholder="Caus. Ann."></th>
+                <th><input class="col-filter" data-field="Stato e Causale Annullamento" placeholder="Stato/Caus."></th>
+                <th><input class="col-filter" data-field="Causale Ebdm" placeholder="Caus. Ebdm"></th>
+                <th><input class="col-filter" data-field="Causale Annullamento2" placeholder="Caus. Ann. 2"></th>
+                <th><input class="col-filter" data-field="Service Point Code" placeholder="SP Code"></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="result-info"><strong id="koCountVisible">0</strong> pratiche visualizzate</p>
       </div>
 
       <!-- Pratiche Non Firmati -->
       <div class="tab-pane fade" id="tab-nonfirmati">
-        <h4 class="text-tiffany mb-2">Pratiche Non Firmate</h4>
-        <table id="nonFirmatiTable" class="table table-bordered">
-          <thead>
-            <tr>
-              <th>Sel.</th>
-              <th>AM</th>
-              <th>Dealer</th>
-              <th>Nome Op.</th>
-              <th>Stato PDC</th>
-              <th>P.IVA</th>
-              <th>CF</th>
-              <th>Nome</th>
-              <th>Cognome</th>
-              <th>Prest.</th>
-              <th>Stato Case</th>
-              <th>Indirizzo</th>
-              <th>Data creazione</th>
-              <th>Caus. Ann.</th>
-              <th>Stato e Causale Annullamento</th>
-              <th>Causale Ebdm</th>
-              <th>Causale Annullamento2</th>
-              <th>SP Code</th>
-            </tr>
-            <tr>
-              <th></th>
-              <th><input class="col-filter" data-field="AM" placeholder="AM"></th>
-              <th><input class="col-filter" data-field="DEALER" placeholder="Dealer"></th>
-              <th><input class="col-filter" data-field="Nome opportunità" placeholder="Nome Op."></th>
-              <th><input class="col-filter" data-field="Stato PDC" placeholder="Stato PDC"></th>
-              <th><input class="col-filter" data-field="Partita IVA" placeholder="P.IVA"></th>
-              <th><input class="col-filter" data-field="Codice Fiscale Cliente" placeholder="CF"></th>
-              <th><input class="col-filter" data-field="Nome Cliente" placeholder="Nome"></th>
-              <th><input class="col-filter" data-field="Cognome Cliente" placeholder="Cognome"></th>
-              <th><input class="col-filter" data-field="Prestazione" placeholder="Prest."></th>
-              <th><input class="col-filter" data-field="Stato Case" placeholder="Stato Case"></th>
-              <th><input class="col-filter" data-field="Indirizzo" placeholder="Indirizzo"></th>
-              <th><input class="col-filter" data-field="Data creazione" placeholder="Data creazione"></th>
-              <th><input class="col-filter" data-field="Causale annullamento" placeholder="Caus. Ann."></th>
-              <th><input class="col-filter" data-field="Stato e Causale Annullamento" placeholder="Stato e Causale Ann."></th>
-              <th><input class="col-filter" data-field="Causale Ebdm" placeholder="Caus. Ebdm"></th>
-              <th><input class="col-filter" data-field="Causale Annullamento2" placeholder="Caus. Ann. 2"></th>
-              <th><input class="col-filter" data-field="Service Point Code" placeholder="SP Code"></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-        <button id="sendEmailNonFirmati" class="btn btn-tiffany mt-2">Invia Non Firmati via Email</button>
+        <div class="panel-toolbar">
+          <div>
+            <h4><i class="bi bi-pen-fill text-warning"></i> Pratiche Non Firmate</h4>
+            <div class="legend"><span><span class="swatch sent"></span>Già inviate via email</span></div>
+          </div>
+          <button id="sendEmailNonFirmati" class="btn-tiffany"><i class="bi bi-envelope-fill"></i> Invia Non Firmati selezionati</button>
+        </div>
+        <div class="table-wrap">
+          <table id="nonFirmatiTable" class="dash">
+            <thead>
+              <tr>
+                <th>Sel.</th>
+                <th>AM</th>
+                <th>Dealer</th>
+                <th>Nome Op.</th>
+                <th>Stato PDC</th>
+                <th>P.IVA</th>
+                <th>CF</th>
+                <th>Nome</th>
+                <th>Cognome</th>
+                <th>Prest.</th>
+                <th>Stato Case</th>
+                <th>Indirizzo</th>
+                <th>Data creazione</th>
+                <th>Caus. Ann.</th>
+                <th>Stato e Causale Annullamento</th>
+                <th>Causale Ebdm</th>
+                <th>Causale Annullamento2</th>
+                <th>SP Code</th>
+              </tr>
+              <tr class="filter-row">
+                <th></th>
+                <th><input class="col-filter" data-field="AM" placeholder="AM"></th>
+                <th><input class="col-filter" data-field="DEALER" placeholder="Dealer"></th>
+                <th><input class="col-filter" data-field="Nome opportunità" placeholder="Nome Op."></th>
+                <th><input class="col-filter" data-field="Stato PDC" placeholder="Stato PDC"></th>
+                <th><input class="col-filter" data-field="Partita IVA" placeholder="P.IVA"></th>
+                <th><input class="col-filter" data-field="Codice Fiscale Cliente" placeholder="CF"></th>
+                <th><input class="col-filter" data-field="Nome Cliente" placeholder="Nome"></th>
+                <th><input class="col-filter" data-field="Cognome Cliente" placeholder="Cognome"></th>
+                <th><input class="col-filter" data-field="Prestazione" placeholder="Prest."></th>
+                <th><input class="col-filter" data-field="Stato Case" placeholder="Stato Case"></th>
+                <th><input class="col-filter" data-field="Indirizzo" placeholder="Indirizzo"></th>
+                <th><input class="col-filter" data-field="Data creazione" placeholder="Data"></th>
+                <th><input class="col-filter" data-field="Causale annullamento" placeholder="Caus. Ann."></th>
+                <th><input class="col-filter" data-field="Stato e Causale Annullamento" placeholder="Stato/Caus."></th>
+                <th><input class="col-filter" data-field="Causale Ebdm" placeholder="Caus. Ebdm"></th>
+                <th><input class="col-filter" data-field="Causale Annullamento2" placeholder="Caus. Ann. 2"></th>
+                <th><input class="col-filter" data-field="Service Point Code" placeholder="SP Code"></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="result-info"><strong id="nfCountVisible">0</strong> pratiche visualizzate</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========= MODAL: Email Preview ========= -->
+  <div class="modal fade" id="emailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-envelope-paper-fill"></i> &nbsp;Anteprima Email</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted" style="font-size:.85rem; margin-bottom:.75rem">
+            Copia il testo formattato (i valori importanti sono in <strong>grassetto</strong>) e incollalo nel client di posta,
+            oppure apri direttamente il client mail (in testo semplice senza asterischi).
+          </p>
+          <div class="email-preview" id="emailPreview"></div>
+        </div>
+        <div class="modal-footer" style="border-top:1px solid var(--border)">
+          <button type="button" class="btn-outline-tiffany" id="btnCopyRich"><i class="bi bi-clipboard-check"></i> Copia (con grassetto)</button>
+          <button type="button" class="btn-outline-tiffany" id="btnCopyPlain"><i class="bi bi-clipboard"></i> Copia testo semplice</button>
+          <button type="button" class="btn-tiffany" id="btnOpenMailto"><i class="bi bi-send-fill"></i> Apri client mail</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========= MODAL: Save Closing ========= -->
+  <div class="modal fade" id="saveClosingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-bookmark-plus-fill"></i> &nbsp;Salva report di chiusura</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted" style="font-size:.85rem">
+            Crea uno snapshot del report corrente associato a un mese. Potrai ricaricarlo in qualsiasi momento da "Carica chiusura".
+            Mese minimo: <strong>Gennaio 2026</strong>.
+          </p>
+          <label for="closingMonthInput" class="form-label fw-semibold" style="font-size:.85rem">Mese di chiusura</label>
+          <input type="month" id="closingMonthInput" class="form-control" min="2026-01">
+          <div id="overwriteHint" class="mt-2" style="font-size:.8rem; color:#92400e; display:none">
+            <i class="bi bi-exclamation-triangle-fill"></i> Esiste già un report di chiusura per questo mese: verrà sovrascritto.
+          </div>
+        </div>
+        <div class="modal-footer" style="border-top:1px solid var(--border)">
+          <button type="button" class="btn-outline-tiffany" data-bs-dismiss="modal">Annulla</button>
+          <button type="button" class="btn-tiffany" id="btnConfirmSaveClosing"><i class="bi bi-save-fill"></i> Salva chiusura</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========= MODAL: Load Closing ========= -->
+  <div class="modal fade" id="loadClosingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-archive-fill"></i> &nbsp;Report di chiusura archiviati</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+        </div>
+        <div class="modal-body">
+          <div id="closingList" class="closing-list"></div>
+        </div>
+        <div class="modal-footer" style="border-top:1px solid var(--border)">
+          <button type="button" class="btn-outline-tiffany" data-bs-dismiss="modal">Chiudi</button>
+        </div>
       </div>
     </div>
   </div>
@@ -214,11 +1040,87 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
+    /* ============================================================
+       STATE
+       ============================================================ */
     let workbookData = [];
+    let lastFileDateStr = '';
+    let lastFileName = '';
+    let lastImportedAt = null;
+    let viewingClosing = null; // null | 'YYYY-MM'
+    let currentEmailContext = null; // { plain, html, subject }
+    const MONTH_NAMES_IT = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
 
-    document.addEventListener('DOMContentLoaded', () => {
+    /* ============================================================
+       INDEXEDDB
+       ============================================================ */
+    const DB_NAME = 'aceaDashboard';
+    const DB_VERSION = 1;
+    const STORE_CURRENT = 'current';
+    const STORE_CLOSING = 'closing';
+
+    function openDB() {
+      return new Promise((res, rej) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = e => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_CURRENT)) db.createObjectStore(STORE_CURRENT);
+          if (!db.objectStoreNames.contains(STORE_CLOSING)) db.createObjectStore(STORE_CLOSING);
+        };
+        req.onsuccess = e => res(e.target.result);
+        req.onerror = e => rej(e.target.error);
+      });
+    }
+    async function idbPut(store, key, value) {
+      const db = await openDB();
+      return new Promise((res, rej) => {
+        const tx = db.transaction(store, 'readwrite');
+        tx.objectStore(store).put(value, key);
+        tx.oncomplete = () => res();
+        tx.onerror = e => rej(e.target.error);
+      });
+    }
+    async function idbGet(store, key) {
+      const db = await openDB();
+      return new Promise((res, rej) => {
+        const tx = db.transaction(store, 'readonly');
+        const req = tx.objectStore(store).get(key);
+        req.onsuccess = () => res(req.result);
+        req.onerror = e => rej(e.target.error);
+      });
+    }
+    async function idbDelete(store, key) {
+      const db = await openDB();
+      return new Promise((res, rej) => {
+        const tx = db.transaction(store, 'readwrite');
+        tx.objectStore(store).delete(key);
+        tx.oncomplete = () => res();
+        tx.onerror = e => rej(e.target.error);
+      });
+    }
+    async function idbAll(store) {
+      const db = await openDB();
+      return new Promise((res, rej) => {
+        const tx = db.transaction(store, 'readonly');
+        const req = tx.objectStore(store).openCursor();
+        const out = [];
+        req.onsuccess = e => {
+          const cur = e.target.result;
+          if (cur) { out.push({ key: cur.key, value: cur.value }); cur.continue(); }
+          else res(out);
+        };
+        req.onerror = e => rej(e.target.error);
+      });
+    }
+
+    /* ============================================================
+       BOOT
+       ============================================================ */
+    document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('fileInput').addEventListener('change', handleFile);
-      document.getElementById('filterDealerAm').addEventListener('change', renderDealer);
+      document.getElementById('globalAmFilter').addEventListener('change', () => {
+        renderAll();
+      });
 
       document.querySelectorAll('.col-filter').forEach(inp =>
         inp.addEventListener('input', () => {
@@ -231,64 +1133,236 @@
       document.getElementById('sendEmailKo').addEventListener('click', sendKOEmail);
       document.getElementById('sendEmailNonFirmati').addEventListener('click', sendNonFirmatiEmail);
       document.getElementById('exportOkExcelBtn').addEventListener('click', exportFilteredOKToExcel);
+
+      document.getElementById('btnSaveClosing').addEventListener('click', openSaveClosingModal);
+      document.getElementById('btnLoadClosing').addEventListener('click', openLoadClosingModal);
+      document.getElementById('btnConfirmSaveClosing').addEventListener('click', confirmSaveClosing);
+      document.getElementById('closingMonthInput').addEventListener('change', updateOverwriteHint);
+
+      document.getElementById('btnBackToCurrent').addEventListener('click', backToCurrent);
+      document.getElementById('btnClearSent').addEventListener('click', clearSentMarks);
+
+      document.getElementById('btnCopyRich').addEventListener('click', copyEmailRich);
+      document.getElementById('btnCopyPlain').addEventListener('click', copyEmailPlain);
+      document.getElementById('btnOpenMailto').addEventListener('click', openEmailClient);
+
+      document.getElementById('dateBadgeText').textContent = today();
+
+      // Restore last imported workbook from IndexedDB
+      try {
+        const saved = await idbGet(STORE_CURRENT, 'latest');
+        if (saved && Array.isArray(saved.data)) {
+          loadDataset(saved.data, saved.fileName || '', saved.dateStr || today(), saved.importedAt || null);
+        }
+      } catch (err) {
+        console.warn('Restore failed:', err);
+      }
     });
 
+    /* ============================================================
+       UTILS
+       ============================================================ */
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function formatDate(v) {
+      return v instanceof Date ? v.toLocaleDateString('it-IT') : v;
+    }
+    function today() {
+      const d = new Date();
+      return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
+    }
+    function nowIso() { return new Date().toISOString(); }
+    function formatImportedTs(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    }
+    function parseDateFromFilename(name) {
+      const base = String(name || '').replace(/\.[^/.]+$/, '').toLowerCase();
+      const monthMap = {
+        gennaio:'01', febbraio:'02', marzo:'03', aprile:'04',
+        maggio:'05', giugno:'06', luglio:'07', agosto:'08',
+        settembre:'09', ottobre:'10', novembre:'11', dicembre:'12'
+      };
+      const monthMatch = base.match(/(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\s*([0-9]{1,2})$/i);
+      if (monthMatch) {
+        const mm = monthMap[monthMatch[1].toLowerCase()];
+        const dd = String(monthMatch[2]).padStart(2,'0');
+        return `${dd}/${mm}`;
+      }
+      const numericMatch = base.match(/([0-9]{1,2})\s*$/);
+      if (numericMatch) {
+        const dd = String(numericMatch[1]).padStart(2,'0');
+        return `${dd}/12`;
+      }
+      return today();
+    }
     function normalizeStatus(arr) {
       arr.forEach(r => {
-        if (r['STATO'] != null) {
-          r['STATO'] = String(r['STATO']).trim().toUpperCase();
-        }
+        if (r['STATO'] != null) r['STATO'] = String(r['STATO']).trim().toUpperCase();
       });
     }
+    function normalizeHeaderKey(str) {
+      return String(str || '')
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
+    }
+    function getFieldValueFlexible(row, possibleNames) {
+      if (!row || typeof row !== 'object') return '';
+      const keys = Object.keys(row);
+      const normalizedMap = {};
+      keys.forEach(k => { normalizedMap[normalizeHeaderKey(k)] = k; });
+      for (const name of possibleNames) {
+        const normalized = normalizeHeaderKey(name);
+        if (normalizedMap[normalized] != null) return row[normalizedMap[normalized]] ?? '';
+      }
+      return '';
+    }
+    function getPaymentMethod(row) {
+      return getFieldValueFlexible(row, [
+        'Billing Profile: Modalità di Pagamento',
+        'Billing Profile Modalità di Pagamento',
+        'Modalità di Pagamento',
+        'Metodo di pagamento'
+      ]);
+    }
+    function monthKeyFromInput(v) {
+      // input type=month returns "YYYY-MM"
+      return v && /^\d{4}-\d{2}$/.test(v) ? v : null;
+    }
+    function monthLabel(key) {
+      const [y, m] = key.split('-');
+      return `${MONTH_NAMES_IT[parseInt(m,10)-1]} ${y}`;
+    }
+    function currentMonthIsoKey() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    }
 
+    /* ============================================================
+       FILE HANDLING
+       ============================================================ */
     function handleFile(e) {
       const file = e.target.files[0];
       if (!file) return;
-
+      const fname = file.name || '';
       const reader = new FileReader();
-      reader.onload = ev => {
-        const wb = XLSX.read(new Uint8Array(ev.target.result), {
-          type: 'array',
-          cellDates: true
-        });
-
-        const targetSheetName = wb.SheetNames.find(name => String(name).trim().toLowerCase() === 'db acea');
+      reader.onload = async ev => {
+        const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array', cellDates: true });
+        const targetSheetName = wb.SheetNames.find(n => String(n).trim().toLowerCase() === 'db acea');
         if (!targetSheetName) {
           alert('Nel file Excel non è presente il foglio "DB Acea".');
           e.target.value = '';
           return;
         }
-
         const ws = wb.Sheets[targetSheetName];
         const newData = XLSX.utils.sheet_to_json(ws, { defval: '' });
         normalizeStatus(newData);
 
-        workbookData = newData;
+        const dateStr = parseDateFromFilename(fname);
+        const importedAt = nowIso();
 
-        document.getElementById('filterDealerAm').value = '';
-        document.querySelectorAll('.col-filter').forEach(i => i.value = '');
+        // Overwrite current in IDB (precise: the latest import is always THE current)
+        try {
+          await idbPut(STORE_CURRENT, 'latest', { data: newData, fileName: fname, dateStr, importedAt });
+        } catch (err) {
+          console.warn('Persist failed:', err);
+          alert('Attenzione: salvataggio locale non riuscito. Il report rimarrà disponibile solo in questa sessione.');
+        }
 
-        populateAmFilters();
-        renderDealer();
-        renderManager();
-        renderOKDetailsTable();
-        renderKOTable();
-        renderNonFirmatiTable();
+        // Exiting any archive view: a new upload always brings you to "current"
+        viewingClosing = null;
+        document.getElementById('archiveBanner').style.display = 'none';
+
+        loadDataset(newData, fname, dateStr, importedAt);
       };
       reader.readAsArrayBuffer(file);
       e.target.value = '';
     }
 
+    function loadDataset(data, fileName, dateStr, importedAt) {
+      workbookData = data;
+      lastFileName = fileName || '';
+      lastFileDateStr = dateStr || today();
+      lastImportedAt = importedAt || null;
+
+      // Update header badges
+      const fb = document.getElementById('fileBadge');
+      if (lastFileName) {
+        fb.style.display = 'inline-flex';
+        document.getElementById('fileBadgeName').textContent = lastFileName;
+      } else {
+        fb.style.display = 'none';
+      }
+      document.getElementById('dateBadgeText').textContent = lastFileDateStr;
+      const ib = document.getElementById('importedBadge');
+      if (lastImportedAt) {
+        ib.style.display = 'inline-flex';
+        document.getElementById('importedBadgeText').textContent = 'Importato: ' + formatImportedTs(lastImportedAt);
+      } else {
+        ib.style.display = 'none';
+      }
+
+      // Reset filters
+      document.getElementById('globalAmFilter').value = '';
+      document.querySelectorAll('.col-filter').forEach(i => i.value = '');
+
+      populateAmFilters();
+      renderAll();
+    }
+
     function populateAmFilters() {
-      const ams = Array.from(new Set(workbookData.map(r => r['AM']).filter(x => x)));
-      const select = document.getElementById('filterDealerAm');
-      select.innerHTML = '<option value="">Tutti AM</option>' + ams.map(a => `<option>${a}</option>`).join('');
+      const ams = Array.from(new Set(workbookData.map(r => r['AM']).filter(x => x))).sort();
+      const select = document.getElementById('globalAmFilter');
+      const prev = select.value;
+      select.innerHTML = '<option value="">Tutti gli Area Manager</option>' + ams.map(a => `<option>${escapeHtml(a)}</option>`).join('');
+      if (ams.includes(prev)) select.value = prev;
     }
 
-    function formatDate(v) {
-      return v instanceof Date ? v.toLocaleDateString('it-IT') : v;
+    function getGlobalAm() {
+      return document.getElementById('globalAmFilter').value;
+    }
+    function scopedRows() {
+      const am = getGlobalAm();
+      return am ? workbookData.filter(r => r['AM'] === am) : workbookData;
     }
 
+    function renderAll() {
+      updateKPI();
+      renderDealer();
+      renderManager();
+      renderOKDetailsTable();
+      renderKOTable();
+      renderNonFirmatiTable();
+    }
+
+    /* ============================================================
+       KPI
+       ============================================================ */
+    function updateKPI() {
+      const rows = scopedRows();
+      const tot = rows.length;
+      const ok = rows.filter(r => r['STATO'] === 'OK').length;
+      const ko = rows.filter(r => r['STATO'] === 'KO').length;
+      const nf = rows.filter(r => r['STATO'] === 'NON FIRMATO').length;
+      const am = new Set(rows.map(r => r['AM']).filter(x => x)).size;
+      document.getElementById('kpiTot').textContent = tot.toLocaleString('it-IT');
+      document.getElementById('kpiOk').textContent = ok.toLocaleString('it-IT');
+      document.getElementById('kpiKo').textContent = ko.toLocaleString('it-IT');
+      document.getElementById('kpiNf').textContent = nf.toLocaleString('it-IT');
+      document.getElementById('kpiAm').textContent = am.toLocaleString('it-IT');
+      document.getElementById('cnt-ok').textContent = ok;
+      document.getElementById('cnt-ko').textContent = ko;
+      document.getElementById('cnt-nf').textContent = nf;
+      document.getElementById('cnt-am').textContent = am;
+    }
+
+    /* ============================================================
+       FILTERS
+       ============================================================ */
     function applyFilters(rows, tableId) {
       const f = {};
       document.querySelectorAll(`#${tableId} thead .col-filter`).forEach(i => {
@@ -296,57 +1370,15 @@
         if (v) f[i.dataset.field] = v;
       });
       return rows.filter(r =>
-        Object.entries(f).every(([k, v]) =>
-          String(r[k] || '').toLowerCase().includes(v)
-        )
+        Object.entries(f).every(([k, v]) => String(r[k] || '').toLowerCase().includes(v))
       );
     }
 
-    function normalizeHeaderKey(str) {
-      return String(str || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '');
-    }
-
-    function getFieldValueFlexible(row, possibleNames) {
-      if (!row || typeof row !== 'object') return '';
-      const keys = Object.keys(row);
-      const normalizedMap = {};
-      keys.forEach(k => {
-        normalizedMap[normalizeHeaderKey(k)] = k;
-      });
-
-      for (const name of possibleNames) {
-        const normalized = normalizeHeaderKey(name);
-        if (normalizedMap[normalized] != null) {
-          return row[normalizedMap[normalized]] ?? '';
-        }
-      }
-      return '';
-    }
-
-    function getPaymentMethod(row) {
-      return getFieldValueFlexible(row, [
-        'Billing Profile: Modalità di Pagamento',
-        'billing profile: modalità di pagamento',
-        'BILLING PROFILE: MODALITÀ DI PAGAMENTO',
-        'Billing Profile Modalità di Pagamento',
-        'Modalità di Pagamento',
-        'modalità di pagamento',
-        'MODALITÀ DI PAGAMENTO',
-        'Metodo di pagamento',
-        'metodo di pagamento',
-        'METODO DI PAGAMENTO'
-      ]);
-    }
-
+    /* ============================================================
+       RENDERERS
+       ============================================================ */
     function renderDealer() {
-      const amVal = document.getElementById('filterDealerAm').value;
-      const rows = workbookData.filter(r =>
-        r['STATO'] === 'OK' && (amVal === '' || r['AM'] === amVal)
-      );
+      const rows = scopedRows().filter(r => r['STATO'] === 'OK');
       const cnt = {};
       rows.forEach(r => {
         const key = `${r.DEALER}||${r.AM}`;
@@ -357,362 +1389,372 @@
         return { dealer, am, count: c };
       }).sort((a, b) => b.count - a.count);
 
+      document.getElementById('cnt-dealer').textContent = arr.length;
+
+      const body = arr.length
+        ? arr.map((d, i) => {
+            const rankCls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+            return `<tr>
+              <td><span class="rank-pill ${rankCls}">${i+1}</span></td>
+              <td><strong>${escapeHtml(d.dealer)}</strong></td>
+              <td>${escapeHtml(d.am)}</td>
+              <td><span class="count-pill">${d.count}</span></td>
+              <td><button class="btn-wa" onclick="sendAvanzamento('${String(d.dealer).replace(/'/g, "\\'")}', ${d.count})"><i class="bi bi-whatsapp"></i> Invia avanzamento</button></td>
+            </tr>`;
+          }).join('')
+        : `<tr><td colspan="5"><div class="empty-state"><i class="bi bi-inbox"></i><p>Nessun dato disponibile. Carica un file Excel per iniziare.</p></div></td></tr>`;
+
       document.getElementById('dealerTable').innerHTML =
-        `<thead><tr><th>#</th><th>Dealer</th><th>AM</th><th>OK</th><th>Invia avanzamento</th></tr></thead>
-         <tbody>${arr.map((d, i) =>
-            `<tr><td>${i+1}</td><td>${d.dealer}</td><td>${d.am}</td><td>${d.count}</td><td><button class="btn btn-tiffany btn-sm" onclick="sendAvanzamento('${String(d.dealer).replace(/'/g, "\\'")}', ${d.count})">Invia avanzamento</button></td></tr>`
-         ).join('')}</tbody>`;
+        `<thead><tr><th>#</th><th>Dealer</th><th>AM</th><th>OK</th><th>Azione</th></tr></thead>
+         <tbody>${body}</tbody>`;
     }
 
     function renderManager() {
-      const rows = workbookData.filter(r => r['STATO'] === 'OK');
+      const rows = scopedRows().filter(r => r['STATO'] === 'OK');
       const cnt = {};
       rows.forEach(r => cnt[r['AM']] = (cnt[r['AM']] || 0) + 1);
       const arr = Object.entries(cnt).map(([am, c]) => ({ am, count: c })).sort((a, b) => b.count - a.count);
 
+      const body = arr.length
+        ? arr.map((d, i) => {
+            const rankCls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+            return `<tr>
+              <td><span class="rank-pill ${rankCls}">${i+1}</span></td>
+              <td><strong>${escapeHtml(d.am)}</strong></td>
+              <td><span class="count-pill">${d.count}</span></td>
+            </tr>`;
+          }).join('')
+        : `<tr><td colspan="3"><div class="empty-state"><i class="bi bi-inbox"></i><p>Nessun dato disponibile.</p></div></td></tr>`;
+
       document.getElementById('managerTable').innerHTML =
-        `<thead><tr><th>#</th><th>AM</th><th>OK</th></tr></thead>
-         <tbody>${arr.map((d, i) =>
-            `<tr><td>${i+1}</td><td>${d.am}</td><td>${d.count}</td></tr>`
-         ).join('')}</tbody>`;
+        `<thead><tr><th>#</th><th>Area Manager</th><th>OK</th></tr></thead>
+         <tbody>${body}</tbody>`;
+    }
+
+    function buildDetailRow(r, i) {
+      return `
+        <tr data-key="${escapeHtml(r['Service Point Code'])}-${escapeHtml(r['Nome opportunità'])}">
+          <td><input type="checkbox" value="${i}" class="form-check-input"></td>
+          <td>${escapeHtml(r['AM'])}</td>
+          <td><strong>${escapeHtml(r.DEALER)}</strong></td>
+          <td>${escapeHtml(r['Nome opportunità'])}</td>
+          <td>${escapeHtml(r['Stato PDC'])}</td>
+          <td>${escapeHtml(r['Partita IVA'])}</td>
+          <td>${escapeHtml(r['Codice Fiscale Cliente'])}</td>
+          <td>${escapeHtml(r['Nome Cliente'])}</td>
+          <td>${escapeHtml(r['Cognome Cliente'])}</td>
+          <td>${escapeHtml(r['Prestazione'])}</td>
+          <td>${escapeHtml(r['Stato Case'])}</td>
+          <td>${escapeHtml(r['Indirizzo'])}</td>
+          <td>${escapeHtml(formatDate(r['Data creazione']))}</td>
+          <td>${escapeHtml(r['Causale annullamento'])}</td>
+          <td>${escapeHtml(r['Causale Annullamento2'] || r['Causale Annullamento'])}</td>
+          <td>${escapeHtml(r['Causale Ebdm'])}</td>
+          <td>${escapeHtml(r['Service Point Code'])}</td>
+        </tr>`;
+    }
+
+    function buildKoNfRow(r, i) {
+      return `
+        <tr data-key="${escapeHtml(r['Service Point Code'])}-${escapeHtml(r['Nome opportunità'])}">
+          <td><input type="checkbox" value="${i}" class="form-check-input"></td>
+          <td>${escapeHtml(r['AM'])}</td>
+          <td><strong>${escapeHtml(r['DEALER'])}</strong></td>
+          <td>${escapeHtml(r['Nome opportunità'])}</td>
+          <td>${escapeHtml(r['Stato PDC'])}</td>
+          <td>${escapeHtml(r['Partita IVA'])}</td>
+          <td>${escapeHtml(r['Codice Fiscale Cliente'])}</td>
+          <td>${escapeHtml(r['Nome Cliente'])}</td>
+          <td>${escapeHtml(r['Cognome Cliente'])}</td>
+          <td>${escapeHtml(r['Prestazione'])}</td>
+          <td>${escapeHtml(r['Stato Case'])}</td>
+          <td>${escapeHtml(r['Indirizzo'])}</td>
+          <td>${escapeHtml(formatDate(r['Data creazione']))}</td>
+          <td>${escapeHtml(r['Causale annullamento'] || '')}</td>
+          <td>${escapeHtml(r['Stato e Causale Annullamento'] || '')}</td>
+          <td>${escapeHtml(r['Causale Ebdm'] || '')}</td>
+          <td>${escapeHtml(r['Causale Annullamento2'] || '')}</td>
+          <td>${escapeHtml(r['Service Point Code'])}</td>
+        </tr>`;
     }
 
     function renderOKDetailsTable() {
-      let rows = workbookData.filter(r => r['STATO'] === 'OK');
+      let rows = scopedRows().filter(r => r['STATO'] === 'OK');
       rows = applyFilters(rows, 'okDetailsTable');
-      document.querySelector('#okDetailsTable tbody').innerHTML =
-        rows.map((r, i) => `
-        <tr data-key="${r['Service Point Code']}-${r['Nome opportunità']}">
-          <td><input type="checkbox" value="${i}"></td>
-          <td>${r['AM']}</td><td>${r.DEALER}</td><td>${r['Nome opportunità']}</td>
-          <td>${r['Stato PDC']}</td><td>${r['Partita IVA']}</td>
-          <td>${r['Codice Fiscale Cliente']}</td><td>${r['Nome Cliente']}</td>
-          <td>${r['Cognome Cliente']}</td><td>${r['Prestazione']}</td>
-          <td>${r['Stato Case']}</td><td>${r['Indirizzo']}</td>
-          <td>${formatDate(r['Data creazione'])}</td>
-          <td>${r['Causale annullamento']}</td>
-          <td>${r['Causale Annullamento']}</td>
-          <td>${r['Causale Ebdm']}</td>
-          <td>${r['Service Point Code']}</td>
-        </tr>`).join('');
-      restore('okDetailsTable', 'sentOkKeys');
+      const tbody = document.querySelector('#okDetailsTable tbody');
+      tbody.innerHTML = rows.length
+        ? rows.map((r, i) => buildDetailRow(r, i)).join('')
+        : `<tr><td colspan="17"><div class="empty-state"><i class="bi bi-search"></i><p>Nessuna pratica corrisponde ai filtri.</p></div></td></tr>`;
+      document.getElementById('okCount').textContent = rows.length;
+      restoreSentRows('okDetailsTable', 'sentOkKeys');
     }
 
     function renderKOTable() {
-      let rows = workbookData.filter(r => r['STATO'] === 'KO');
+      let rows = scopedRows().filter(r => r['STATO'] === 'KO');
       rows = applyFilters(rows, 'koTable');
-      document.querySelector('#koTable tbody').innerHTML =
-        rows.map((r, i) => `
-        <tr data-key="${r['Service Point Code']}-${r['Nome opportunità']}">
-          <td><input type="checkbox" value="${i}"></td>
-          <td>${r['AM']}</td>
-          <td>${r['DEALER']}</td>
-          <td>${r['Nome opportunità']}</td>
-          <td>${r['Stato PDC']}</td>
-          <td>${r['Partita IVA']}</td>
-          <td>${r['Codice Fiscale Cliente']}</td>
-          <td>${r['Nome Cliente']}</td>
-          <td>${r['Cognome Cliente']}</td>
-          <td>${r['Prestazione']}</td>
-          <td>${r['Stato Case']}</td>
-          <td>${r['Indirizzo']}</td>
-          <td>${formatDate(r['Data creazione'])}</td>
-          <td>${r['Causale annullamento'] || ''}</td>
-          <td>${r['Stato e Causale Annullamento'] || ''}</td>
-          <td>${r['Causale Ebdm'] || ''}</td>
-          <td>${r['Causale Annullamento2'] || ''}</td>
-          <td>${r['Service Point Code']}</td>
-        </tr>`).join('');
-      restore('koTable', 'sentKoKeys');
+      const tbody = document.querySelector('#koTable tbody');
+      tbody.innerHTML = rows.length
+        ? rows.map((r, i) => buildKoNfRow(r, i)).join('')
+        : `<tr><td colspan="18"><div class="empty-state"><i class="bi bi-search"></i><p>Nessuna pratica corrisponde ai filtri.</p></div></td></tr>`;
+      document.getElementById('koCountVisible').textContent = rows.length;
+      restoreSentRows('koTable', 'sentKoKeys');
     }
 
     function renderNonFirmatiTable() {
-      let rows = workbookData.filter(r => r['STATO'] === 'NON FIRMATO');
+      let rows = scopedRows().filter(r => r['STATO'] === 'NON FIRMATO');
       rows = applyFilters(rows, 'nonFirmatiTable');
-      document.querySelector('#nonFirmatiTable tbody').innerHTML =
-        rows.map((r, i) => `
-        <tr data-key="${r['Service Point Code']}-${r['Nome opportunità']}">
-          <td><input type="checkbox" value="${i}"></td>
-          <td>${r['AM']}</td>
-          <td>${r['DEALER']}</td>
-          <td>${r['Nome opportunità']}</td>
-          <td>${r['Stato PDC']}</td>
-          <td>${r['Partita IVA']}</td>
-          <td>${r['Codice Fiscale Cliente']}</td>
-          <td>${r['Nome Cliente']}</td>
-          <td>${r['Cognome Cliente']}</td>
-          <td>${r['Prestazione']}</td>
-          <td>${r['Stato Case']}</td>
-          <td>${r['Indirizzo']}</td>
-          <td>${formatDate(r['Data creazione'])}</td>
-          <td>${r['Causale annullamento'] || ''}</td>
-          <td>${r['Stato e Causale Annullamento'] || ''}</td>
-          <td>${r['Causale Ebdm'] || ''}</td>
-          <td>${r['Causale Annullamento2'] || ''}</td>
-          <td>${r['Service Point Code']}</td>
-        </tr>`).join('');
-      restore('nonFirmatiTable', 'sentNonFirmatiKeys');
+      const tbody = document.querySelector('#nonFirmatiTable tbody');
+      tbody.innerHTML = rows.length
+        ? rows.map((r, i) => buildKoNfRow(r, i)).join('')
+        : `<tr><td colspan="18"><div class="empty-state"><i class="bi bi-search"></i><p>Nessuna pratica corrisponde ai filtri.</p></div></td></tr>`;
+      document.getElementById('nfCountVisible').textContent = rows.length;
+      restoreSentRows('nonFirmatiTable', 'sentNonFirmatiKeys');
     }
 
-    function restore(tableId, storageKey) {
+    /* ============================================================
+       SENT STATE (localStorage)
+       ============================================================ */
+    function restoreSentRows(tableId, storageKey) {
       const sent = JSON.parse(localStorage.getItem(storageKey) || '[]');
       document.querySelectorAll(`#${tableId} tbody tr`).forEach(tr => {
-        tr.querySelector('input[type=checkbox]').checked = false;
-        tr.classList.toggle('table-warning', sent.includes(tr.dataset.key));
+        const cb = tr.querySelector('input[type=checkbox]');
+        if (cb) cb.checked = false;
+        if (tr.dataset.key) tr.classList.toggle('row-sent', sent.includes(tr.dataset.key));
       });
     }
-
-    function persist(tableId, storageKey) {
+    function persistSent(tableId, storageKey) {
       let sent = JSON.parse(localStorage.getItem(storageKey) || '[]');
       document.querySelectorAll(`#${tableId} tbody input:checked`).forEach(cb => {
         const key = cb.closest('tr').dataset.key;
         if (!sent.includes(key)) sent.push(key);
       });
       localStorage.setItem(storageKey, JSON.stringify(sent));
-      restore(tableId, storageKey);
+      restoreSentRows(tableId, storageKey);
+    }
+    function clearSentMarks() {
+      if (!confirm('Sei sicuro di voler resettare tutte le segnalazioni di righe già inviate? Questa azione non è reversibile.')) return;
+      localStorage.removeItem('sentOkKeys');
+      localStorage.removeItem('sentKoKeys');
+      localStorage.removeItem('sentNonFirmatiKeys');
+      renderAll();
+    }
+
+    /* ============================================================
+       EMAIL (modal preview, rich-text copy, mailto fallback)
+       ============================================================ */
+    const EMAIL_FIELDS = [
+      { key:'Nome Cliente', label:'Nome' },
+      { key:'Cognome Cliente', label:'Cognome' },
+      { key:'STATO', label:'Stato' },
+      { key:'Service Point Code', label:'Service Point Code' },
+      { key:'DEALER', label:'Dealer' },
+      { key:'Nome opportunità', label:'Nome Op.' },
+      { key:'Stato PDC', label:'Stato PDC' },
+      { key:'Partita IVA', label:'P.IVA' },
+      { key:'Codice Fiscale Cliente', label:'CF' },
+      { key:'Prestazione', label:'Prest.' },
+      { key:'Stato Case', label:'Stato Case' },
+      { key:'Indirizzo', label:'Indirizzo' },
+      { key:'Data creazione', label:'Data creazione' },
+      { key:'Causale annullamento', label:'Caus. Ann.' },
+      { key:'Stato e Causale Annullamento', label:'Stato e Causale Annullamento' },
+      { key:'Causale Ebdm', label:'Causale Ebdm' },
+      { key:'Causale Annullamento2', label:'Causale Annullamento2' }
+    ];
+
+    function buildEmailPlain(rows, idx, intro) {
+      let body = intro + '\n\n';
+      idx.forEach(i => {
+        const r = rows[i];
+        EMAIL_FIELDS.forEach(f => {
+          const v = f.key === 'Data creazione' ? formatDate(r[f.key]) : r[f.key];
+          if (v !== '' && v != null) body += `${f.label}: ${v}\n`;
+        });
+        body += '\n';
+      });
+      return body.trim();
+    }
+
+    function buildEmailHtml(rows, idx, intro) {
+      let html = `<div style="font-family:Inter,Arial,sans-serif; font-size:14px; line-height:1.55; color:#1f2937">`;
+      html += `<p>${escapeHtml(intro)}</p>`;
+      idx.forEach(i => {
+        const r = rows[i];
+        html += `<div class="practice-block" style="margin-bottom:14px">`;
+        EMAIL_FIELDS.forEach(f => {
+          const v = f.key === 'Data creazione' ? formatDate(r[f.key]) : r[f.key];
+          if (v !== '' && v != null) {
+            html += `<div>${escapeHtml(f.label)}: <strong>${escapeHtml(v)}</strong></div>`;
+          }
+        });
+        html += `</div>`;
+      });
+      html += `</div>`;
+      return html;
+    }
+
+    function openEmailModal(rows, idx, intro, subject) {
+      if (!idx.length) { alert('Seleziona almeno una pratica.'); return; }
+      const plain = buildEmailPlain(rows, idx, intro);
+      const html = buildEmailHtml(rows, idx, intro);
+      currentEmailContext = { plain, html, subject };
+      document.getElementById('emailPreview').innerHTML = html;
+      const modal = new bootstrap.Modal(document.getElementById('emailModal'));
+      modal.show();
     }
 
     function sendKOEmail() {
-      const rows = applyFilters(workbookData.filter(r => r['STATO'] === 'KO'), 'koTable');
+      const rows = applyFilters(scopedRows().filter(r => r['STATO'] === 'KO'), 'koTable');
       const idx = Array.from(document.querySelectorAll('#koTable tbody input:checked')).map(cb => +cb.value);
-      persist('koTable', 'sentKoKeys');
-      const intro = "Ciao! Risultano queste pratiche in stato KO. Verifichiamo se riusciamo a recuperarle.";
-      window.location.href = `mailto:?subject=Pratiche%20KO&body=${composeKO(rows, idx, intro)}`;
+      if (!idx.length) { alert('Seleziona almeno una pratica.'); return; }
+      persistSent('koTable', 'sentKoKeys');
+      openEmailModal(rows, idx, 'Ciao! Risultano queste pratiche in stato KO. Verifichiamo se riusciamo a recuperarle.', 'Pratiche KO');
     }
 
     function sendNonFirmatiEmail() {
-      const rows = applyFilters(workbookData.filter(r => r['STATO'] === 'NON FIRMATO'), 'nonFirmatiTable');
+      const rows = applyFilters(scopedRows().filter(r => r['STATO'] === 'NON FIRMATO'), 'nonFirmatiTable');
       const idx = Array.from(document.querySelectorAll('#nonFirmatiTable tbody input:checked')).map(cb => +cb.value);
-      persist('nonFirmatiTable', 'sentNonFirmatiKeys');
-      const intro = "Ciao! Risultano queste pratiche in stato Non Firmato. Verifichiamo se riusciamo a recuperarle.";
-      window.location.href = `mailto:?subject=Pratiche%20Non%20Firmate&body=${composeKO(rows, idx, intro)}`;
+      if (!idx.length) { alert('Seleziona almeno una pratica.'); return; }
+      persistSent('nonFirmatiTable', 'sentNonFirmatiKeys');
+      openEmailModal(rows, idx, 'Ciao! Risultano queste pratiche in stato Non Firmato. Verifichiamo se riusciamo a recuperarle.', 'Pratiche Non Firmate');
     }
 
-    function composeKO(rows, selectedIdx, intro) {
-      let body = intro + "\n\n";
-      const fields = [
-        { key:'Nome Cliente', label:'Nome' },
-        { key:'Cognome Cliente', label:'Cognome' },
-        { key:'STATO', label:'Stato' },
-        { key:'Service Point Code', label:'Service Point Code' },
-        { key:'DEALER', label:'Dealer' },
-        { key:'Nome opportunità', label:'Nome Op.' },
-        { key:'Stato PDC', label:'Stato PDC' },
-        { key:'Partita IVA', label:'P.IVA' },
-        { key:'Codice Fiscale Cliente', label:'CF' },
-        { key:'Prestazione', label:'Prest.' },
-        { key:'Stato Case', label:'Stato Case' },
-        { key:'Indirizzo', label:'Indirizzo' },
-        { key:'Data creazione', label:'Data creazione' },
-        { key:'Causale annullamento', label:'Caus. Ann.' },
-        { key:'Stato e Causale Annullamento', label:'Stato e Causale Annullamento' },
-        { key:'Causale Ebdm', label:'Causale Ebdm' },
-        { key:'Causale Annullamento2', label:'Causale Annullamento2' }
-      ];
-      selectedIdx.forEach(i => {
-        const r = rows[i];
-        fields.forEach(f => {
-          const v = f.key === 'Data creazione' ? formatDate(r[f.key]) : r[f.key];
-          if (v) body += `${f.label}: **${v}**\n`;
-        });
-        body += "\n";
-      });
-      return encodeURIComponent(body);
-    }
-
-    let lastFileDateStr = '';
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const fileInput = document.getElementById('fileInput');
-      if (fileInput) {
-        fileInput.addEventListener('change', (e) => {
-          const f = e.target.files && e.target.files[0];
-          if (f && f.name) lastFileDateStr = parseDateFromFilename(f.name);
-          else lastFileDateStr = today();
-        }, true);
+    async function copyEmailRich() {
+      if (!currentEmailContext) return;
+      const { plain, html } = currentEmailContext;
+      try {
+        if (navigator.clipboard && window.ClipboardItem) {
+          const item = new ClipboardItem({
+            'text/html': new Blob([html], { type: 'text/html' }),
+            'text/plain': new Blob([plain], { type: 'text/plain' })
+          });
+          await navigator.clipboard.write([item]);
+        } else {
+          // Fallback: select & copy via temp element
+          const tmp = document.createElement('div');
+          tmp.contentEditable = 'true';
+          tmp.style.position = 'fixed';
+          tmp.style.left = '-9999px';
+          tmp.innerHTML = html;
+          document.body.appendChild(tmp);
+          const range = document.createRange();
+          range.selectNodeContents(tmp);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          document.execCommand('copy');
+          sel.removeAllRanges();
+          document.body.removeChild(tmp);
+        }
+        flashButton('btnCopyRich', 'Copiato con grassetto!');
+      } catch (err) {
+        console.error(err);
+        alert('Copia non riuscita. Prova "Copia testo semplice".');
       }
-    });
+    }
 
+    async function copyEmailPlain() {
+      if (!currentEmailContext) return;
+      try {
+        await navigator.clipboard.writeText(currentEmailContext.plain);
+        flashButton('btnCopyPlain', 'Copiato!');
+      } catch (err) {
+        alert('Copia non riuscita.');
+      }
+    }
+
+    function openEmailClient() {
+      if (!currentEmailContext) return;
+      const { plain, subject } = currentEmailContext;
+      const url = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plain)}`;
+      window.location.href = url;
+    }
+
+    function flashButton(id, msg) {
+      const btn = document.getElementById(id);
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<i class="bi bi-check2"></i> ${msg}`;
+      btn.disabled = true;
+      setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 1400);
+    }
+
+    /* ============================================================
+       AVANZAMENTO WhatsApp
+       ============================================================ */
     function sendAvanzamento(dealer, ok) {
-      let soglia = 1;
-      let next = null;
-      let limit = 0;
-
-      if (ok >= 55) {
-        soglia = 5;
-        next = null;
-      } else if (ok >= 30) {
-        soglia = 4;
-        next = 55;
-        limit = 10;
-      } else if (ok >= 15) {
-        soglia = 3;
-        next = 30;
-        limit = 5;
-      } else if (ok >= 5) {
-        soglia = 2;
-        next = 15;
-        limit = 5;
-      } else {
-        soglia = 1;
-        next = 5;
-        limit = 2;
-      }
+      let soglia = 1, next = null, limit = 0;
+      if (ok >= 55) { soglia = 5; next = null; }
+      else if (ok >= 30) { soglia = 4; next = 55; limit = 10; }
+      else if (ok >= 15) { soglia = 3; next = 30; limit = 5; }
+      else if (ok >= 5) { soglia = 2; next = 15; limit = 5; }
+      else { soglia = 1; next = 5; limit = 2; }
 
       const dateStr = lastFileDateStr || today();
-
       let msg =
 `Ciao! Ecco avanzamento al: ${dateStr}
 ${dealer} - ${ok} pezzi
 Attualmente sei in soglia ${soglia}`;
-
       if (next !== null && (next - ok) > 0 && (next - ok) <= limit) {
         msg += `\nMancano ${next - ok} pezzi per aumentare i tuoi guadagni`;
       }
-
-      msg += `\n\nQueste sono le soglie di gara:
-1 - 5 - 15 - 30 - 55`;
-
+      msg += `\n\nQueste sono le soglie di gara:\n1 - 5 - 15 - 30 - 55`;
       window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
     }
 
-    function parseDateFromFilename(name) {
-      const base = String(name || '').replace(/\.[^/.]+$/, '').toLowerCase();
-
-      const monthMap = {
-        gennaio:'01',
-        febbraio:'02',
-        marzo:'03',
-        aprile:'04',
-        maggio:'05',
-        giugno:'06',
-        luglio:'07',
-        agosto:'08',
-        settembre:'09',
-        ottobre:'10',
-        novembre:'11',
-        dicembre:'12'
-      };
-
-      const monthMatch = base.match(/(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\s*([0-9]{1,2})$/i);
-      if (monthMatch) {
-        const mm = monthMap[monthMatch[1].toLowerCase()];
-        const dd = String(monthMatch[2]).padStart(2,'0');
-        return `${dd}/${mm}`;
-      }
-
-      const numericMatch = base.match(/([0-9]{1,2})\s*$/);
-      if (numericMatch) {
-        const dd = String(numericMatch[1]).padStart(2,'0');
-        return `${dd}/12`;
-      }
-
-      return today();
-    }
-
-    function today() {
-      const d = new Date();
-      return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
-    }
-
+    /* ============================================================
+       EXPORT EXCEL (OK)
+       ============================================================ */
     async function exportFilteredOKToExcel() {
-      let rows = workbookData.filter(r => r['STATO'] === 'OK');
+      let rows = scopedRows().filter(r => r['STATO'] === 'OK');
       rows = applyFilters(rows, 'okDetailsTable');
-
-      if (!rows.length) {
-        alert('Nessuna pratica OK da esportare con i filtri attuali.');
-        return;
-      }
+      if (!rows.length) { alert('Nessuna pratica OK da esportare con i filtri attuali.'); return; }
 
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Pratiche OK');
-
       const headers = [
         'AM', 'Dealer', 'Nome Op.', 'Stato PDC', 'P.IVA', 'CF', 'Nome', 'Cognome',
         'Prest.', 'Stato Case', 'Indirizzo', 'Data creazione', 'Metodo di pagamento',
         'Caus. Ann.', 'Dettaglio annull.', 'Caus. Ebdm', 'SP Code'
       ];
-
       worksheet.addRow(headers);
 
+      const sentKeys = JSON.parse(localStorage.getItem('sentOkKeys') || '[]');
       rows.forEach(r => {
         worksheet.addRow([
-          r['AM'] || '',
-          r['DEALER'] || '',
-          r['Nome opportunità'] || '',
-          r['Stato PDC'] || '',
-          r['Partita IVA'] || '',
-          r['Codice Fiscale Cliente'] || '',
-          r['Nome Cliente'] || '',
-          r['Cognome Cliente'] || '',
-          r['Prestazione'] || '',
-          r['Stato Case'] || '',
-          r['Indirizzo'] || '',
-          formatDate(r['Data creazione']) || '',
-          getPaymentMethod(r) || '',
-          r['Causale annullamento'] || '',
-          r['Causale Annullamento'] || '',
-          r['Causale Ebdm'] || '',
-          r['Service Point Code'] || ''
+          r['AM'] || '', r['DEALER'] || '', r['Nome opportunità'] || '',
+          r['Stato PDC'] || '', r['Partita IVA'] || '', r['Codice Fiscale Cliente'] || '',
+          r['Nome Cliente'] || '', r['Cognome Cliente'] || '', r['Prestazione'] || '',
+          r['Stato Case'] || '', r['Indirizzo'] || '', formatDate(r['Data creazione']) || '',
+          getPaymentMethod(r) || '', r['Causale annullamento'] || '',
+          r['Causale Annullamento2'] || r['Causale Annullamento'] || '',
+          r['Causale Ebdm'] || '', r['Service Point Code'] || ''
         ]);
+        const key = `${r['Service Point Code']}-${r['Nome opportunità']}`;
+        if (!sentKeys.includes(key)) sentKeys.push(key);
       });
 
       worksheet.columns = [
-        { width: 13 },
-        { width: 18 },
-        { width: 18 },
-        { width: 15 },
-        { width: 14 },
-        { width: 27.33 },
-        { width: 16 },
-        { width: 16 },
-        { width: 19.66 },
-        { width: 16 },
-        { width: 51 },
-        { width: 16 },
-        { width: 24 },
-        { width: 18 },
-        { width: 22 },
-        { width: 32 },
-        { width: 18 }
+        { width: 13 }, { width: 18 }, { width: 18 }, { width: 15 },
+        { width: 14 }, { width: 27.33 }, { width: 16 }, { width: 16 },
+        { width: 19.66 }, { width: 16 }, { width: 51 }, { width: 16 },
+        { width: 24 }, { width: 18 }, { width: 22 }, { width: 32 }, { width: 18 }
       ];
-
       const headerRow = worksheet.getRow(1);
       headerRow.height = 20;
       headerRow.eachCell(cell => {
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FF0ABAB5' }
-        };
-        cell.font = {
-          bold: true,
-          color: { argb: 'FFFFFFFF' }
-        };
-        cell.alignment = {
-          vertical: 'middle',
-          horizontal: 'left'
-        };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0ABAB5' } };
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.alignment = { vertical: 'middle', horizontal: 'left' };
       });
-
       worksheet.views = [{ state: 'frozen', ySplit: 1 }];
-      worksheet.autoFilter = {
-        from: 'A1',
-        to: 'Q1'
-      };
+      worksheet.autoFilter = { from: 'A1', to: 'Q1' };
 
       const dealerFilter = document.querySelector('#okDetailsTable thead .col-filter[data-field="DEALER"]')?.value?.trim() || '';
-      const safeDealer = dealerFilter
-        ? dealerFilter.replace(/[\\\/:*?"<>|]/g, '_')
-        : 'tutte';
-
+      const safeDealer = dealerFilter ? dealerFilter.replace(/[\\\/:*?"<>|]/g, '_') : 'tutte';
       const fileName = `pratiche_ok_${safeDealer}.xlsx`;
 
       const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      });
-
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.download = fileName;
@@ -720,6 +1762,152 @@ Attualmente sei in soglia ${soglia}`;
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
+
+      localStorage.setItem('sentOkKeys', JSON.stringify(sentKeys));
+      renderOKDetailsTable();
+    }
+
+    /* ============================================================
+       CLOSING REPORTS (monthly snapshots)
+       ============================================================ */
+    function openSaveClosingModal() {
+      if (!workbookData.length) {
+        alert('Carica prima un file Excel.');
+        return;
+      }
+      const input = document.getElementById('closingMonthInput');
+      const cur = currentMonthIsoKey();
+      input.value = cur < '2026-01' ? '2026-01' : cur;
+      updateOverwriteHint();
+      const modal = new bootstrap.Modal(document.getElementById('saveClosingModal'));
+      modal.show();
+    }
+
+    async function updateOverwriteHint() {
+      const v = document.getElementById('closingMonthInput').value;
+      const hint = document.getElementById('overwriteHint');
+      if (!v || v < '2026-01') { hint.style.display = 'none'; return; }
+      try {
+        const existing = await idbGet(STORE_CLOSING, v);
+        hint.style.display = existing ? 'block' : 'none';
+      } catch { hint.style.display = 'none'; }
+    }
+
+    async function confirmSaveClosing() {
+      const v = document.getElementById('closingMonthInput').value;
+      const key = monthKeyFromInput(v);
+      if (!key) { alert('Seleziona un mese valido.'); return; }
+      if (key < '2026-01') { alert('Il mese minimo consentito è Gennaio 2026.'); return; }
+      const payload = {
+        month: key,
+        data: workbookData,
+        fileName: lastFileName,
+        dateStr: lastFileDateStr,
+        importedAt: lastImportedAt,
+        savedAt: nowIso(),
+        rowCount: workbookData.length
+      };
+      try {
+        await idbPut(STORE_CLOSING, key, payload);
+        bootstrap.Modal.getInstance(document.getElementById('saveClosingModal'))?.hide();
+        alert(`Report di chiusura per ${monthLabel(key)} salvato (${workbookData.length} righe).`);
+      } catch (err) {
+        console.error(err);
+        alert('Salvataggio non riuscito: ' + (err?.message || err));
+      }
+    }
+
+    async function openLoadClosingModal() {
+      const list = document.getElementById('closingList');
+      list.innerHTML = '<p class="text-muted text-center py-3">Caricamento...</p>';
+      const modal = new bootstrap.Modal(document.getElementById('loadClosingModal'));
+      modal.show();
+      try {
+        const all = await idbAll(STORE_CLOSING);
+        const items = all
+          .map(x => x.value)
+          .filter(v => v && v.month && v.month >= '2026-01')
+          .sort((a, b) => b.month.localeCompare(a.month));
+        if (!items.length) {
+          list.innerHTML = '<div class="empty-state"><i class="bi bi-archive"></i><p>Nessun report di chiusura archiviato.<br><small>Salvane uno dal pulsante "Salva chiusura mese".</small></p></div>';
+          return;
+        }
+        list.innerHTML = items.map(it => `
+          <div class="closing-item">
+            <div>
+              <div class="ci-month">${monthLabel(it.month)}</div>
+              <div class="ci-meta">
+                <i class="bi bi-file-earmark"></i> ${escapeHtml(it.fileName || '—')} ·
+                <i class="bi bi-stack"></i> ${it.rowCount?.toLocaleString('it-IT') ?? '?'} righe ·
+                <i class="bi bi-calendar-event"></i> data report: ${escapeHtml(it.dateStr || '—')} ·
+                <i class="bi bi-clock"></i> salvato: ${formatImportedTs(it.savedAt)}
+              </div>
+            </div>
+            <div class="ci-actions">
+              <button class="btn-tiffany" data-action="load" data-key="${it.month}"><i class="bi bi-box-arrow-in-down"></i> Carica</button>
+              <button class="btn-danger-light" data-action="delete" data-key="${it.month}"><i class="bi bi-trash"></i></button>
+            </div>
+          </div>
+        `).join('');
+        list.querySelectorAll('button[data-action="load"]').forEach(b =>
+          b.addEventListener('click', () => loadClosing(b.dataset.key))
+        );
+        list.querySelectorAll('button[data-action="delete"]').forEach(b =>
+          b.addEventListener('click', () => deleteClosing(b.dataset.key))
+        );
+      } catch (err) {
+        list.innerHTML = '<p class="text-danger">Errore: ' + escapeHtml(err?.message || String(err)) + '</p>';
+      }
+    }
+
+    async function loadClosing(key) {
+      try {
+        const v = await idbGet(STORE_CLOSING, key);
+        if (!v || !Array.isArray(v.data)) { alert('Archivio non valido.'); return; }
+        viewingClosing = key;
+        loadDataset(v.data, v.fileName || '', v.dateStr || '', v.importedAt || null);
+        // Banner
+        document.getElementById('archiveBanner').style.display = 'flex';
+        document.getElementById('archiveLabel').textContent = monthLabel(key) + ' (snapshot)';
+        bootstrap.Modal.getInstance(document.getElementById('loadClosingModal'))?.hide();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        alert('Caricamento non riuscito: ' + (err?.message || err));
+      }
+    }
+
+    async function deleteClosing(key) {
+      if (!confirm(`Eliminare il report di chiusura di ${monthLabel(key)}?`)) return;
+      try {
+        await idbDelete(STORE_CLOSING, key);
+        openLoadClosingModal(); // refresh
+      } catch (err) {
+        alert('Eliminazione non riuscita: ' + (err?.message || err));
+      }
+    }
+
+    async function backToCurrent() {
+      viewingClosing = null;
+      document.getElementById('archiveBanner').style.display = 'none';
+      try {
+        const saved = await idbGet(STORE_CURRENT, 'latest');
+        if (saved && Array.isArray(saved.data)) {
+          loadDataset(saved.data, saved.fileName || '', saved.dateStr || today(), saved.importedAt || null);
+        } else {
+          // Nothing imported yet
+          workbookData = [];
+          lastFileName = '';
+          lastFileDateStr = today();
+          lastImportedAt = null;
+          document.getElementById('fileBadge').style.display = 'none';
+          document.getElementById('importedBadge').style.display = 'none';
+          document.getElementById('dateBadgeText').textContent = today();
+          populateAmFilters();
+          renderAll();
+        }
+      } catch (err) {
+        console.warn(err);
+      }
     }
   </script>
 </body>
