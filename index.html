@@ -200,6 +200,26 @@
     .archive-banner i { font-size: 1.2rem; }
     .archive-banner .arch-info { display: flex; align-items: center; gap: .65rem; }
 
+    /* ====== BANNER DETECT (auto-rilevamento chiusura) ====== */
+    .detect-banner {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      border: 1px solid #34d399;
+      border-radius: 12px;
+      padding: .85rem 1.25rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      color: #065f46;
+      font-weight: 500;
+      font-size: .9rem;
+      flex-wrap: wrap;
+    }
+    .detect-banner i.det-icon { font-size: 1.3rem; color: #047857; }
+    .detect-banner .det-info { display: flex; align-items: center; gap: .65rem; }
+    .detect-banner .det-actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+
     /* ====== KPI ====== */
     .kpi-grid {
       display: grid;
@@ -603,26 +623,6 @@
     .modal-content { border-radius: 14px; border: none; overflow: hidden; }
     .modal-title { font-weight: 600; }
 
-    .email-preview {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem 1.25rem;
-      max-height: 50vh;
-      overflow-y: auto;
-      font-family: 'Inter', sans-serif;
-      font-size: .88rem;
-      white-space: pre-wrap;
-      line-height: 1.6;
-      color: var(--text);
-    }
-    .email-preview strong { color: var(--tiffany-dark); font-weight: 700; }
-    .email-preview .practice-block {
-      padding: .65rem 0;
-      border-bottom: 1px dashed var(--border);
-    }
-    .email-preview .practice-block:last-child { border-bottom: none; }
-
     .closing-list {
       max-height: 50vh;
       overflow-y: auto;
@@ -713,6 +713,25 @@
         <i class="bi bi-arrow-left-circle"></i> Torna al report corrente
       </button>
     </div>
+
+    <!-- Detect banner (auto-rilevamento chiusura da nome file) -->
+    <div class="detect-banner" id="detectBanner" style="display:none">
+      <div class="det-info">
+        <i class="bi bi-magic det-icon"></i>
+        <div>
+          Rilevato file di chiusura per: <strong id="detectLabel">—</strong>
+          <div style="font-size:.78rem; opacity:.85; font-weight:400">Vuoi archiviarlo automaticamente come report di chiusura?</div>
+        </div>
+      </div>
+      <div class="det-actions">
+        <button id="btnDetectSave" class="btn-tiffany"><i class="bi bi-bookmark-check-fill"></i> Salva chiusura</button>
+        <button id="btnDetectEdit" class="btn-outline-tiffany"><i class="bi bi-pencil"></i> Modifica mese</button>
+        <button id="btnDetectDismiss" class="btn-soft-warning"><i class="bi bi-x-lg"></i> Ignora</button>
+      </div>
+    </div>
+
+    <!-- Hidden file input for "Sostituisci file" of an archived month -->
+    <input type="file" id="replaceFileInput" accept=".xlsx,.xls" style="display:none">
 
     <!-- KPI -->
     <div class="kpi-grid" id="kpiGrid">
@@ -968,30 +987,6 @@
     </div>
   </div>
 
-  <!-- ========= MODAL: Email Preview ========= -->
-  <div class="modal fade" id="emailModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"><i class="bi bi-envelope-paper-fill"></i> &nbsp;Anteprima Email</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
-        </div>
-        <div class="modal-body">
-          <p class="text-muted" style="font-size:.85rem; margin-bottom:.75rem">
-            Copia il testo formattato (i valori importanti sono in <strong>grassetto</strong>) e incollalo nel client di posta,
-            oppure apri direttamente il client mail (in testo semplice senza asterischi).
-          </p>
-          <div class="email-preview" id="emailPreview"></div>
-        </div>
-        <div class="modal-footer" style="border-top:1px solid var(--border)">
-          <button type="button" class="btn-outline-tiffany" id="btnCopyRich"><i class="bi bi-clipboard-check"></i> Copia (con grassetto)</button>
-          <button type="button" class="btn-outline-tiffany" id="btnCopyPlain"><i class="bi bi-clipboard"></i> Copia testo semplice</button>
-          <button type="button" class="btn-tiffany" id="btnOpenMailto"><i class="bi bi-send-fill"></i> Apri client mail</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ========= MODAL: Save Closing ========= -->
   <div class="modal fade" id="saveClosingModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -1048,8 +1043,21 @@
     let lastFileName = '';
     let lastImportedAt = null;
     let viewingClosing = null; // null | 'YYYY-MM'
-    let currentEmailContext = null; // { plain, html, subject }
     const MONTH_NAMES_IT = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+    const MONTH_LOOKUP_IT = {
+      gennaio:'01', gen:'01',
+      febbraio:'02', feb:'02',
+      marzo:'03', mar:'03',
+      aprile:'04', apr:'04',
+      maggio:'05', mag:'05',
+      giugno:'06', giu:'06',
+      luglio:'07', lug:'07',
+      agosto:'08', ago:'08',
+      settembre:'09', set:'09', sett:'09',
+      ottobre:'10', ott:'10',
+      novembre:'11', nov:'11',
+      dicembre:'12', dic:'12'
+    };
 
     /* ============================================================
        INDEXEDDB
@@ -1142,9 +1150,11 @@
       document.getElementById('btnBackToCurrent').addEventListener('click', backToCurrent);
       document.getElementById('btnClearSent').addEventListener('click', clearSentMarks);
 
-      document.getElementById('btnCopyRich').addEventListener('click', copyEmailRich);
-      document.getElementById('btnCopyPlain').addEventListener('click', copyEmailPlain);
-      document.getElementById('btnOpenMailto').addEventListener('click', openEmailClient);
+      document.getElementById('btnDetectSave').addEventListener('click', detectSave);
+      document.getElementById('btnDetectEdit').addEventListener('click', detectEditMonth);
+      document.getElementById('btnDetectDismiss').addEventListener('click', hideDetectBanner);
+
+      document.getElementById('replaceFileInput').addEventListener('change', handleReplaceFile);
 
       document.getElementById('dateBadgeText').textContent = today();
 
@@ -1242,6 +1252,26 @@
       return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     }
 
+    /**
+     * Rileva mese e anno di chiusura dal nome file.
+     * Pattern richiesto: la parola "chiusura" + un mese italiano (anche abbreviato).
+     * L'anno è opzionale: se assente, usa l'anno corrente (clampato a >= 2026).
+     * Esempi: "chiusura febbraio.xlsx", "Chiusura Gen 2026.xlsx", "report-chiusura-mar-2026.xls"
+     */
+    function detectClosingFromFilename(name) {
+      const base = String(name || '').toLowerCase().replace(/\.[^/.]+$/, '');
+      if (!/chiusur/.test(base)) return null;
+      const monthRe = /\b(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre|gen|feb|mar|apr|mag|giu|lug|ago|sett|set|ott|nov|dic)\b/;
+      const m = base.match(monthRe);
+      if (!m) return null;
+      const mm = MONTH_LOOKUP_IT[m[1]];
+      if (!mm) return null;
+      const yMatch = base.match(/\b(20\d{2})\b/);
+      let yyyy = yMatch ? yMatch[1] : String(new Date().getFullYear());
+      if (yyyy < '2026') yyyy = '2026';
+      return { monthKey: `${yyyy}-${mm}` };
+    }
+
     /* ============================================================
        FILE HANDLING
        ============================================================ */
@@ -1278,9 +1308,29 @@
         document.getElementById('archiveBanner').style.display = 'none';
 
         loadDataset(newData, fname, dateStr, importedAt);
+
+        // Auto-rilevamento "chiusura" dal nome file
+        const detected = detectClosingFromFilename(fname);
+        if (detected && detected.monthKey >= '2026-01') {
+          showDetectBanner(detected.monthKey);
+        } else {
+          hideDetectBanner();
+        }
       };
       reader.readAsArrayBuffer(file);
       e.target.value = '';
+    }
+
+    function showDetectBanner(monthKey) {
+      const banner = document.getElementById('detectBanner');
+      banner.style.display = 'flex';
+      banner.dataset.month = monthKey;
+      document.getElementById('detectLabel').textContent = monthLabel(monthKey);
+    }
+    function hideDetectBanner() {
+      const banner = document.getElementById('detectBanner');
+      banner.style.display = 'none';
+      delete banner.dataset.month;
     }
 
     function loadDataset(data, fileName, dateStr, importedAt) {
@@ -1575,32 +1625,11 @@
       return body.trim();
     }
 
-    function buildEmailHtml(rows, idx, intro) {
-      let html = `<div style="font-family:Inter,Arial,sans-serif; font-size:14px; line-height:1.55; color:#1f2937">`;
-      html += `<p>${escapeHtml(intro)}</p>`;
-      idx.forEach(i => {
-        const r = rows[i];
-        html += `<div class="practice-block" style="margin-bottom:14px">`;
-        EMAIL_FIELDS.forEach(f => {
-          const v = f.key === 'Data creazione' ? formatDate(r[f.key]) : r[f.key];
-          if (v !== '' && v != null) {
-            html += `<div>${escapeHtml(f.label)}: <strong>${escapeHtml(v)}</strong></div>`;
-          }
-        });
-        html += `</div>`;
-      });
-      html += `</div>`;
-      return html;
-    }
-
-    function openEmailModal(rows, idx, intro, subject) {
+    function openMailto(rows, idx, intro, subject) {
       if (!idx.length) { alert('Seleziona almeno una pratica.'); return; }
-      const plain = buildEmailPlain(rows, idx, intro);
-      const html = buildEmailHtml(rows, idx, intro);
-      currentEmailContext = { plain, html, subject };
-      document.getElementById('emailPreview').innerHTML = html;
-      const modal = new bootstrap.Modal(document.getElementById('emailModal'));
-      modal.show();
+      const body = buildEmailPlain(rows, idx, intro);
+      const url = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = url;
     }
 
     function sendKOEmail() {
@@ -1608,7 +1637,7 @@
       const idx = Array.from(document.querySelectorAll('#koTable tbody input:checked')).map(cb => +cb.value);
       if (!idx.length) { alert('Seleziona almeno una pratica.'); return; }
       persistSent('koTable', 'sentKoKeys');
-      openEmailModal(rows, idx, 'Ciao! Risultano queste pratiche in stato KO. Verifichiamo se riusciamo a recuperarle.', 'Pratiche KO');
+      openMailto(rows, idx, 'Ciao! Risultano queste pratiche in stato KO. Verifichiamo se riusciamo a recuperarle.', 'Pratiche KO');
     }
 
     function sendNonFirmatiEmail() {
@@ -1616,66 +1645,7 @@
       const idx = Array.from(document.querySelectorAll('#nonFirmatiTable tbody input:checked')).map(cb => +cb.value);
       if (!idx.length) { alert('Seleziona almeno una pratica.'); return; }
       persistSent('nonFirmatiTable', 'sentNonFirmatiKeys');
-      openEmailModal(rows, idx, 'Ciao! Risultano queste pratiche in stato Non Firmato. Verifichiamo se riusciamo a recuperarle.', 'Pratiche Non Firmate');
-    }
-
-    async function copyEmailRich() {
-      if (!currentEmailContext) return;
-      const { plain, html } = currentEmailContext;
-      try {
-        if (navigator.clipboard && window.ClipboardItem) {
-          const item = new ClipboardItem({
-            'text/html': new Blob([html], { type: 'text/html' }),
-            'text/plain': new Blob([plain], { type: 'text/plain' })
-          });
-          await navigator.clipboard.write([item]);
-        } else {
-          // Fallback: select & copy via temp element
-          const tmp = document.createElement('div');
-          tmp.contentEditable = 'true';
-          tmp.style.position = 'fixed';
-          tmp.style.left = '-9999px';
-          tmp.innerHTML = html;
-          document.body.appendChild(tmp);
-          const range = document.createRange();
-          range.selectNodeContents(tmp);
-          const sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
-          document.execCommand('copy');
-          sel.removeAllRanges();
-          document.body.removeChild(tmp);
-        }
-        flashButton('btnCopyRich', 'Copiato con grassetto!');
-      } catch (err) {
-        console.error(err);
-        alert('Copia non riuscita. Prova "Copia testo semplice".');
-      }
-    }
-
-    async function copyEmailPlain() {
-      if (!currentEmailContext) return;
-      try {
-        await navigator.clipboard.writeText(currentEmailContext.plain);
-        flashButton('btnCopyPlain', 'Copiato!');
-      } catch (err) {
-        alert('Copia non riuscita.');
-      }
-    }
-
-    function openEmailClient() {
-      if (!currentEmailContext) return;
-      const { plain, subject } = currentEmailContext;
-      const url = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plain)}`;
-      window.location.href = url;
-    }
-
-    function flashButton(id, msg) {
-      const btn = document.getElementById(id);
-      const orig = btn.innerHTML;
-      btn.innerHTML = `<i class="bi bi-check2"></i> ${msg}`;
-      btn.disabled = true;
-      setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 1400);
+      openMailto(rows, idx, 'Ciao! Risultano queste pratiche in stato Non Firmato. Verifichiamo se riusciamo a recuperarle.', 'Pratiche Non Firmate');
     }
 
     /* ============================================================
@@ -1793,28 +1763,118 @@ Attualmente sei in soglia ${soglia}`;
       } catch { hint.style.display = 'none'; }
     }
 
+    async function saveClosingForMonth(key, dataOverride, fileNameOverride, dateStrOverride) {
+      const data = dataOverride || workbookData;
+      const fname = fileNameOverride != null ? fileNameOverride : lastFileName;
+      const ds = dateStrOverride != null ? dateStrOverride : lastFileDateStr;
+      const payload = {
+        month: key,
+        data,
+        fileName: fname,
+        dateStr: ds,
+        importedAt: lastImportedAt,
+        savedAt: nowIso(),
+        rowCount: data.length
+      };
+      await idbPut(STORE_CLOSING, key, payload);
+      return payload;
+    }
+
     async function confirmSaveClosing() {
       const v = document.getElementById('closingMonthInput').value;
       const key = monthKeyFromInput(v);
       if (!key) { alert('Seleziona un mese valido.'); return; }
       if (key < '2026-01') { alert('Il mese minimo consentito è Gennaio 2026.'); return; }
-      const payload = {
-        month: key,
-        data: workbookData,
-        fileName: lastFileName,
-        dateStr: lastFileDateStr,
-        importedAt: lastImportedAt,
-        savedAt: nowIso(),
-        rowCount: workbookData.length
-      };
       try {
-        await idbPut(STORE_CLOSING, key, payload);
+        await saveClosingForMonth(key);
         bootstrap.Modal.getInstance(document.getElementById('saveClosingModal'))?.hide();
+        hideDetectBanner();
         alert(`Report di chiusura per ${monthLabel(key)} salvato (${workbookData.length} righe).`);
       } catch (err) {
         console.error(err);
         alert('Salvataggio non riuscito: ' + (err?.message || err));
       }
+    }
+
+    /* ====== Detect-banner actions ====== */
+    async function detectSave() {
+      const banner = document.getElementById('detectBanner');
+      const key = banner.dataset.month;
+      if (!key) return;
+      try {
+        await saveClosingForMonth(key);
+        hideDetectBanner();
+        alert(`Report di chiusura per ${monthLabel(key)} salvato (${workbookData.length} righe).`);
+      } catch (err) {
+        alert('Salvataggio non riuscito: ' + (err?.message || err));
+      }
+    }
+    function detectEditMonth() {
+      const banner = document.getElementById('detectBanner');
+      const key = banner.dataset.month;
+      if (!workbookData.length) { alert('Carica prima un file Excel.'); return; }
+      const input = document.getElementById('closingMonthInput');
+      input.value = key && key >= '2026-01' ? key : (currentMonthIsoKey() < '2026-01' ? '2026-01' : currentMonthIsoKey());
+      updateOverwriteHint();
+      const modal = new bootstrap.Modal(document.getElementById('saveClosingModal'));
+      modal.show();
+    }
+
+    /* ====== Replace file for archived month ====== */
+    function triggerReplaceClosing(monthKey) {
+      const input = document.getElementById('replaceFileInput');
+      input.dataset.targetMonth = monthKey;
+      input.value = '';
+      input.click();
+    }
+
+    function handleReplaceFile(e) {
+      const file = e.target.files[0];
+      const monthKey = e.target.dataset.targetMonth;
+      if (!file || !monthKey) { e.target.value = ''; return; }
+      const fname = file.name || '';
+      const reader = new FileReader();
+      reader.onload = async ev => {
+        const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array', cellDates: true });
+        const targetSheetName = wb.SheetNames.find(n => String(n).trim().toLowerCase() === 'db acea');
+        if (!targetSheetName) {
+          alert('Nel file Excel non è presente il foglio "DB Acea".');
+          e.target.value = '';
+          return;
+        }
+        const ws = wb.Sheets[targetSheetName];
+        const newData = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        normalizeStatus(newData);
+        const dateStr = parseDateFromFilename(fname);
+        const importedAt = nowIso();
+        const payload = {
+          month: monthKey,
+          data: newData,
+          fileName: fname,
+          dateStr,
+          importedAt,
+          savedAt: nowIso(),
+          rowCount: newData.length
+        };
+        try {
+          await idbPut(STORE_CLOSING, monthKey, payload);
+          // Se sto visualizzando quella chiusura, ricarico subito i nuovi dati
+          if (viewingClosing === monthKey) {
+            loadDataset(newData, fname, dateStr, importedAt);
+            document.getElementById('archiveBanner').style.display = 'flex';
+            document.getElementById('archiveLabel').textContent = monthLabel(monthKey) + ' (snapshot)';
+          }
+          alert(`Report di chiusura ${monthLabel(monthKey)} sostituito (${newData.length} righe).`);
+          // Refresh modal se aperto
+          if (document.getElementById('loadClosingModal').classList.contains('show')) {
+            openLoadClosingModal();
+          }
+        } catch (err) {
+          alert('Sostituzione non riuscita: ' + (err?.message || err));
+        }
+        e.target.value = '';
+      };
+      reader.readAsArrayBuffer(file);
     }
 
     async function openLoadClosingModal() {
@@ -1845,12 +1905,16 @@ Attualmente sei in soglia ${soglia}`;
             </div>
             <div class="ci-actions">
               <button class="btn-tiffany" data-action="load" data-key="${it.month}"><i class="bi bi-box-arrow-in-down"></i> Carica</button>
-              <button class="btn-danger-light" data-action="delete" data-key="${it.month}"><i class="bi bi-trash"></i></button>
+              <button class="btn-outline-tiffany" data-action="replace" data-key="${it.month}" title="Sostituisci il file di questo mese"><i class="bi bi-arrow-repeat"></i> Sostituisci file</button>
+              <button class="btn-danger-light" data-action="delete" data-key="${it.month}" title="Elimina"><i class="bi bi-trash"></i></button>
             </div>
           </div>
         `).join('');
         list.querySelectorAll('button[data-action="load"]').forEach(b =>
           b.addEventListener('click', () => loadClosing(b.dataset.key))
+        );
+        list.querySelectorAll('button[data-action="replace"]').forEach(b =>
+          b.addEventListener('click', () => triggerReplaceClosing(b.dataset.key))
         );
         list.querySelectorAll('button[data-action="delete"]').forEach(b =>
           b.addEventListener('click', () => deleteClosing(b.dataset.key))
