@@ -612,6 +612,36 @@
       vertical-align: middle;
     }
     .legend .swatch.sent { background: var(--success-soft); border: 1px solid var(--success-border); }
+    .legend .swatch.sev-warn { background: #fef3c7; border: 1px solid #fcd34d; }
+    .legend .swatch.sev-mid  { background: #fed7aa; border: 1px solid #fb923c; }
+    .legend .swatch.sev-high { background: #fee2e2; border: 1px solid #f87171; }
+
+    /* ====== Improduttivi badges ====== */
+    .streak-badge {
+      padding: .25rem .6rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: .75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      white-space: nowrap;
+    }
+    .streak-warn { background: #fef3c7; color: #92400e; }
+    .streak-mid  { background: #fed7aa; color: #9a3412; }
+    .streak-high { background: #fee2e2; color: #b91c1c; }
+    table.ranking td.cell-zero {
+      color: #b91c1c;
+      font-weight: 700;
+      text-align: center;
+      background: #fee2e2;
+      border-radius: 4px;
+    }
+    table.ranking td.cell-pos {
+      color: #047857;
+      font-weight: 600;
+      text-align: center;
+    }
 
     /* Modals */
     .modal-header {
@@ -779,6 +809,7 @@
       <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ok-details"><i class="bi bi-check2-circle"></i> Pratiche OK <span class="tab-count" id="cnt-ok">0</span></button></li>
       <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ko"><i class="bi bi-x-octagon"></i> Pratiche KO <span class="tab-count" id="cnt-ko">0</span></button></li>
       <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-nonfirmati"><i class="bi bi-pen"></i> Non Firmati <span class="tab-count" id="cnt-nf">0</span></button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-improduttivi"><i class="bi bi-exclamation-triangle"></i> Improduttivi <span class="tab-count" id="cnt-improd">0</span></button></li>
     </ul>
 
     <div class="tab-content">
@@ -984,6 +1015,26 @@
         <p class="result-info"><strong id="nfCountVisible">0</strong> pratiche visualizzate</p>
       </div>
 
+      <!-- Improduttivi -->
+      <div class="tab-pane fade" id="tab-improduttivi">
+        <div class="panel-toolbar">
+          <div>
+            <h4><i class="bi bi-exclamation-triangle-fill text-danger"></i> Negozi Improduttivi</h4>
+            <p class="result-info mb-0 mt-1">
+              Confronto del periodo corrente con le chiusure mensili archiviate (più recente in alto).
+            </p>
+            <div class="legend mt-1">
+              <span><span class="swatch sev-warn"></span>Solo periodo corrente</span>
+              <span><span class="swatch sev-mid"></span>2 mesi consecutivi</span>
+              <span><span class="swatch sev-high"></span>3+ mesi consecutivi</span>
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap" style="max-height:70vh">
+          <table id="improdTable" class="ranking"></table>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -1042,7 +1093,8 @@
     let lastFileDateStr = '';
     let lastFileName = '';
     let lastImportedAt = null;
-    let viewingClosing = null; // null | 'YYYY-MM'
+    let viewingClosing = null; // null | 'YYYY-MM' | '__pending__'
+    let closingsCache = []; // chiusure archiviate in memoria, ordinate desc per month
     const MONTH_NAMES_IT = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
     const MONTH_LOOKUP_IT = {
       gennaio:'01', gen:'01',
@@ -1106,6 +1158,19 @@
         tx.onerror = e => rej(e.target.error);
       });
     }
+    async function refreshClosingsCache() {
+      try {
+        const all = await idbAll(STORE_CLOSING);
+        closingsCache = all
+          .map(x => x.value)
+          .filter(v => v && v.month && Array.isArray(v.data))
+          .sort((a, b) => b.month.localeCompare(a.month));
+      } catch (err) {
+        console.warn('Cache chiusure non disponibile:', err);
+        closingsCache = [];
+      }
+    }
+
     async function idbAll(store) {
       const db = await openDB();
       return new Promise((res, rej) => {
@@ -1158,11 +1223,14 @@
 
       document.getElementById('dateBadgeText').textContent = today();
 
-      // Restore last imported workbook from IndexedDB
+      // Restore last imported workbook + closing cache from IndexedDB
       try {
+        await refreshClosingsCache();
         const saved = await idbGet(STORE_CURRENT, 'latest');
         if (saved && Array.isArray(saved.data)) {
           loadDataset(saved.data, saved.fileName || '', saved.dateStr || today(), saved.importedAt || null);
+        } else {
+          renderImproduttivi(); // mostra messaggio se non c'è ancora nessun dato
         }
       } catch (err) {
         console.warn('Restore failed:', err);
@@ -1295,17 +1363,29 @@
         const dateStr = parseDateFromFilename(fname);
         const importedAt = nowIso();
 
-        // Overwrite current in IDB (precise: the latest import is always THE current)
-        try {
-          await idbPut(STORE_CURRENT, 'latest', { data: newData, fileName: fname, dateStr, importedAt });
-        } catch (err) {
-          console.warn('Persist failed:', err);
-          alert('Attenzione: salvataggio locale non riuscito. Il report rimarrà disponibile solo in questa sessione.');
-        }
+        const isClosingFile = /chiusur/i.test(fname);
 
-        // Exiting any archive view: a new upload always brings you to "current"
-        viewingClosing = null;
-        document.getElementById('archiveBanner').style.display = 'none';
+        if (!isClosingFile) {
+          // Report corrente: sovrascrive sempre STORE_CURRENT (parziale del mese in corso)
+          try {
+            await idbPut(STORE_CURRENT, 'latest', { data: newData, fileName: fname, dateStr, importedAt });
+          } catch (err) {
+            console.warn('Persist failed:', err);
+            alert('Attenzione: salvataggio locale non riuscito. Il report rimarrà disponibile solo in questa sessione.');
+          }
+          viewingClosing = null;
+          document.getElementById('archiveBanner').style.display = 'none';
+        } else {
+          // File di CHIUSURA: NON tocca STORE_CURRENT.
+          // Mostro l'archive-banner per segnalare che è una visualizzazione transitoria.
+          viewingClosing = '__pending__';
+          const det = detectClosingFromFilename(fname);
+          const lbl = det ? monthLabel(det.monthKey) : 'mese non identificato';
+          const banner = document.getElementById('archiveBanner');
+          banner.style.display = 'flex';
+          document.getElementById('archiveLabel').textContent =
+            `File di chiusura (${lbl}) — il report corrente NON è stato modificato`;
+        }
 
         loadDataset(newData, fname, dateStr, importedAt);
 
@@ -1387,6 +1467,7 @@
       renderOKDetailsTable();
       renderKOTable();
       renderNonFirmatiTable();
+      renderImproduttivi();
     }
 
     /* ============================================================
@@ -1559,6 +1640,133 @@
         : `<tr><td colspan="18"><div class="empty-state"><i class="bi bi-search"></i><p>Nessuna pratica corrisponde ai filtri.</p></div></td></tr>`;
       document.getElementById('nfCountVisible').textContent = rows.length;
       restoreSentRows('nonFirmatiTable', 'sentNonFirmatiKeys');
+    }
+
+    /* ============================================================
+       IMPRODUTTIVI (confronto con chiusure archiviate)
+       ============================================================ */
+    function buildOkCountMap(data) {
+      const m = new Map();
+      data.forEach(r => {
+        if (r['STATO'] !== 'OK') return;
+        const dealer = String(r['DEALER'] || '').trim();
+        if (!dealer) return;
+        m.set(dealer, (m.get(dealer) || 0) + 1);
+      });
+      return m;
+    }
+    function buildDealerAmMap(data) {
+      const m = new Map();
+      data.forEach(r => {
+        const dealer = String(r['DEALER'] || '').trim();
+        const am = String(r['AM'] || '').trim();
+        if (dealer && !m.has(dealer)) m.set(dealer, am);
+      });
+      return m;
+    }
+
+    function renderImproduttivi() {
+      const tbl = document.getElementById('improdTable');
+      const cntEl = document.getElementById('cnt-improd');
+      if (!tbl) return;
+
+      const am = getGlobalAm();
+      const periods = [];
+      const currentLabel = viewingClosing === '__pending__'
+        ? 'File caricato'
+        : (viewingClosing ? monthLabel(viewingClosing) + ' (visualizzato)' : 'Periodo corrente');
+      periods.push({
+        label: currentLabel,
+        okMap: buildOkCountMap(workbookData),
+        amMap: buildDealerAmMap(workbookData)
+      });
+      // Aggiungo le chiusure archiviate (escludendo quella che corrisponde al periodo visualizzato per evitare doppione)
+      closingsCache.forEach(c => {
+        if (viewingClosing && viewingClosing === c.month) return;
+        periods.push({
+          label: monthLabel(c.month),
+          okMap: buildOkCountMap(c.data),
+          amMap: buildDealerAmMap(c.data)
+        });
+      });
+
+      // Empty states
+      if (!workbookData.length && closingsCache.length === 0) {
+        cntEl.textContent = 0;
+        tbl.innerHTML = `<thead><tr><th>Improduttivi</th></tr></thead><tbody><tr><td>
+          <div class="empty-state"><i class="bi bi-inbox"></i><p>Carica un file e archivia almeno una chiusura per iniziare l'analisi.</p></div>
+        </td></tr></tbody>`;
+        return;
+      }
+      if (periods.length < 2) {
+        cntEl.textContent = 0;
+        tbl.innerHTML = `<thead><tr><th>Improduttivi</th></tr></thead><tbody><tr><td>
+          <div class="empty-state"><i class="bi bi-archive"></i><p>Nessuna chiusura archiviata utile.<br><small>Salva almeno una chiusura mensile per attivare il confronto.</small></p></div>
+        </td></tr></tbody>`;
+        return;
+      }
+
+      // Union di tutti i dealer mai apparsi in OK in almeno un periodo
+      const allDealers = new Set();
+      periods.forEach(p => p.okMap.forEach((_, d) => allDealers.add(d)));
+
+      const rows = [];
+      allDealers.forEach(dealer => {
+        let dealerAm = '';
+        for (const p of periods) {
+          if (p.amMap.has(dealer)) { dealerAm = p.amMap.get(dealer); break; }
+        }
+        if (am && dealerAm !== am) return;
+
+        // Streak: consecutivi a 0 OK partendo dal periodo corrente in avanti
+        let streak = 0;
+        for (const p of periods) {
+          if ((p.okMap.get(dealer) || 0) === 0) streak++;
+          else break;
+        }
+        if (streak < 1) return;
+
+        const counts = periods.slice(0, Math.min(5, periods.length)).map(p => ({
+          label: p.label,
+          count: p.okMap.get(dealer) || 0
+        }));
+        rows.push({ dealer, am: dealerAm, streak, counts });
+      });
+
+      rows.sort((a, b) => b.streak - a.streak || a.dealer.localeCompare(b.dealer));
+      cntEl.textContent = rows.length;
+
+      if (!rows.length) {
+        tbl.innerHTML = `<thead><tr><th>Improduttivi</th></tr></thead><tbody><tr><td>
+          <div class="empty-state"><i class="bi bi-check2-circle text-success"></i><p>Nessun negozio improduttivo rilevato. Tutti i dealer attivi stanno producendo.</p></div>
+        </td></tr></tbody>`;
+        return;
+      }
+
+      const periodHeaders = periods.slice(0, Math.min(5, periods.length))
+        .map(p => `<th>${escapeHtml(p.label)}</th>`).join('');
+
+      const body = rows.map(r => {
+        const sevClass = r.streak >= 3 ? 'streak-high' : r.streak >= 2 ? 'streak-mid' : 'streak-warn';
+        const sevIcon = r.streak >= 3 ? 'bi-exclamation-octagon-fill'
+                      : r.streak >= 2 ? 'bi-exclamation-triangle-fill'
+                      : 'bi-info-circle-fill';
+        const sevLabel = r.streak >= 3 ? `${r.streak}+ mesi consecutivi`
+                       : r.streak >= 2 ? '2 mesi consecutivi'
+                       : 'Solo periodo corrente';
+        const countCells = r.counts.map(c => {
+          const cls = c.count === 0 ? 'cell-zero' : 'cell-pos';
+          return `<td class="${cls}">${c.count}</td>`;
+        }).join('');
+        return `<tr>
+          <td><strong>${escapeHtml(r.dealer)}</strong></td>
+          <td>${escapeHtml(r.am)}</td>
+          <td><span class="streak-badge ${sevClass}"><i class="bi ${sevIcon}"></i> ${sevLabel}</span></td>
+          ${countCells}
+        </tr>`;
+      }).join('');
+
+      tbl.innerHTML = `<thead><tr><th>Dealer</th><th>AM</th><th>Stato</th>${periodHeaders}</tr></thead><tbody>${body}</tbody>`;
     }
 
     /* ============================================================
@@ -1777,6 +1985,8 @@ Attualmente sei in soglia ${soglia}`;
         rowCount: data.length
       };
       await idbPut(STORE_CLOSING, key, payload);
+      await refreshClosingsCache();
+      renderImproduttivi();
       return payload;
     }
 
@@ -1858,6 +2068,8 @@ Attualmente sei in soglia ${soglia}`;
         };
         try {
           await idbPut(STORE_CLOSING, monthKey, payload);
+          await refreshClosingsCache();
+          renderImproduttivi();
           // Se sto visualizzando quella chiusura, ricarico subito i nuovi dati
           if (viewingClosing === monthKey) {
             loadDataset(newData, fname, dateStr, importedAt);
@@ -1944,6 +2156,8 @@ Attualmente sei in soglia ${soglia}`;
       if (!confirm(`Eliminare il report di chiusura di ${monthLabel(key)}?`)) return;
       try {
         await idbDelete(STORE_CLOSING, key);
+        await refreshClosingsCache();
+        renderImproduttivi();
         openLoadClosingModal(); // refresh
       } catch (err) {
         alert('Eliminazione non riuscita: ' + (err?.message || err));
